@@ -57,10 +57,17 @@ To run using external template and fields files, to send data to a particular WS
 
 ```
 go run wsctl.go \
-   --url='wss://myserver.com:8443/ws \
+   --url='wss://myserver.com:8443/ws' \
    --template=examples/tpl-options-aa.sip \
    --fields=examples/fld-options-aa.json
 ```
+
+For websocket secure connections (wss), by default it skips server's TLS certificate verification. To enforce certificate verification add the command line option '--insecure=false'.
+
+The http url for Origin header can be set with option '--origin=...'.
+
+The websocket subprotocol can be set with option '--protocol=...'.
+
 ## Data Templates
 
 The data to be sent via the websocket connection is built from a template file and a fields file.
