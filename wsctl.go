@@ -42,6 +42,7 @@ type CLIOptions struct {
 	wsorigin string
 	wsproto	string
 	wsinsecure bool
+	wsreceive bool
 	wstemplate string
 	wsfields string
 }
@@ -51,6 +52,7 @@ var cliops = CLIOptions{
 				wsorigin: "http://127.0.0.1",
 				wsproto: "sip",
 				wsinsecure: true,
+				wsreceive: true,
 				wstemplate: "",
 				wsfields: "",
 			}
@@ -65,18 +67,20 @@ func main() {
 			fmt.Fprintf(os.Stderr, "    (each option has short and long version)\n")
 			flag.PrintDefaults()
 		}
-    flag.StringVar(&cliops.wsurl, "url", cliops.wsurl, "websocket url (ws://... or wss://...)")
-    flag.StringVar(&cliops.wsurl, "u", cliops.wsurl, "websocket url (ws://... or wss://...)")
-    flag.StringVar(&cliops.wsorigin, "origin", cliops.wsorigin, "origin http url")
-    flag.StringVar(&cliops.wsorigin, "o", cliops.wsorigin, "origin http url")
-    flag.StringVar(&cliops.wsproto, "proto", cliops.wsproto, "websocket sub-protocol")
-    flag.StringVar(&cliops.wsproto, "p", cliops.wsproto, "websocket sub-protocol")
-    flag.BoolVar(&cliops.wsinsecure, "insecure", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
-    flag.BoolVar(&cliops.wsinsecure, "i", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
+    flag.StringVar(&cliops.wsfields,   "fields", cliops.wsfields, "name of the internal fields map or path to the json fields file")
+    flag.StringVar(&cliops.wsfields,   "f", cliops.wsfields, "name of the internal fields map or path to the json fields file")
+    flag.BoolVar(&cliops.wsinsecure,   "insecure", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
+    flag.BoolVar(&cliops.wsinsecure,   "i", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
+    flag.StringVar(&cliops.wsorigin,   "origin", cliops.wsorigin, "origin http url")
+    flag.StringVar(&cliops.wsorigin,   "o", cliops.wsorigin, "origin http url")
+    flag.StringVar(&cliops.wsproto,    "proto", cliops.wsproto, "websocket sub-protocol")
+    flag.StringVar(&cliops.wsproto,    "p", cliops.wsproto, "websocket sub-protocol")
+    flag.BoolVar(&cliops.wsreceive,    "receive", cliops.wsreceive, "wait to receive response from ws server (true|false)")
+    flag.BoolVar(&cliops.wsreceive,    "r", cliops.wsreceive, "wait to receive response from ws server (true|false)")
     flag.StringVar(&cliops.wstemplate, "template", cliops.wstemplate, "name of internal template or path to template file")
     flag.StringVar(&cliops.wstemplate, "t", cliops.wstemplate, "name of internal template or path to template file")
-    flag.StringVar(&cliops.wsfields, "fields", cliops.wsfields, "name of the internal fields map or path to the json fields file")
-    flag.StringVar(&cliops.wsfields, "f", cliops.wsfields, "name of the internal fields map or path to the json fields file")
+    flag.StringVar(&cliops.wsurl,      "url", cliops.wsurl, "websocket url (ws://... or wss://...)")
+    flag.StringVar(&cliops.wsurl,      "u", cliops.wsurl, "websocket url (ws://... or wss://...)")
     flag.Parse()
 
 	// options for ws connections
@@ -125,10 +129,9 @@ func main() {
 
 	var tpl = template.Must(template.New("wsout").Parse(tplstr))
 	tpl.Execute(&buf, tplfields)
-	//message := []byte(sipTemplates["OPTIONS:TEST"])
-	message := buf.Bytes()
+	wmsg := buf.Bytes()
 
-	// open ws connection and send the buffer content
+	// open ws connection
 	// ws, err := websocket.Dial(wsurl, "", wsorigin)
 	ws, err := websocket.DialConfig(&websocket.Config{
 						Location: urlp,
@@ -142,18 +145,22 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// send data to ws server
 	err = ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	_, err = ws.Write(message)
+	_, err = ws.Write(wmsg)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Sending:\n%s\n", message)
+	fmt.Printf("Sending:\n%s\n", wmsg)
 
-	var msg = make([]byte, 8192)
-	err = ws.SetReadDeadline(time.Now().Add(20 * time.Second))
-	_, err = ws.Read(msg)
-	if err != nil {
-		log.Fatal(err)
+	// receive data from ws server
+	if cliops.wsreceive {
+		var rmsg = make([]byte, 8192)
+		err = ws.SetReadDeadline(time.Now().Add(20 * time.Second))
+		_, err = ws.Read(rmsg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Receiving:\n%s\n", rmsg)
 	}
-	fmt.Printf("Receiving:\n%s\n", msg)
 }
