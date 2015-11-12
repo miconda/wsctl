@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 	"crypto/tls"
 	"encoding/json"
 	"net/http"
@@ -141,6 +142,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	err = ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	_, err = ws.Write(message)
 	if err != nil {
 		log.Fatal(err)
@@ -148,6 +150,7 @@ func main() {
 	fmt.Printf("Sending:\n%s\n", message)
 
 	var msg = make([]byte, 8192)
+	err = ws.SetReadDeadline(time.Now().Add(20 * time.Second))
 	_, err = ws.Read(msg)
 	if err != nil {
 		log.Fatal(err)
