@@ -59,14 +59,13 @@ var cliops = CLIOptions{
 			}
 
 
-func main() {
-    fmt.Printf("starting websocket command line tool (argc: %d)!\n\n", len(os.Args))
-
-    // command line arguments
+func init() {
+	// command line arguments
 	flag.Usage = func() {
 			fmt.Fprintf(os.Stderr, "Usage of %s (v1.0):\n", filepath.Base(os.Args[0]))
 			fmt.Fprintf(os.Stderr, "    (each option has short and long version)\n")
 			flag.PrintDefaults()
+			os.Exit(1)
 		}
     flag.StringVar(&cliops.wsfields,   "fields", cliops.wsfields, "name of the internal fields map or path to the json fields file")
     flag.StringVar(&cliops.wsfields,   "f", cliops.wsfields, "name of the internal fields map or path to the json fields file")
@@ -82,6 +81,11 @@ func main() {
     flag.StringVar(&cliops.wstemplate, "t", cliops.wstemplate, "name of internal template or path to template file")
     flag.StringVar(&cliops.wsurl,      "url", cliops.wsurl, "websocket url (ws://... or wss://...)")
     flag.StringVar(&cliops.wsurl,      "u", cliops.wsurl, "websocket url (ws://... or wss://...)")
+}
+
+func main() {
+    fmt.Printf("starting websocket command line tool (argc: %d)!\n\n", len(os.Args))
+
     flag.Parse()
 
 	// options for ws connections
