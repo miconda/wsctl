@@ -93,7 +93,6 @@ Contributions are welcome! Fork and do pull requests on https://github.com/micon
 Just some ideas for now, not all to be implemented:
 
   * open many websocket connections and send data (tool for stress testing)
-  * replace '\n' with '\r\n' in template file (useful for templates with sip messages)
   * implement www-digest authentication for sip
 
 Suggestions for what to add are welcome as well!

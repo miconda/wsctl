@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"time"
 	"crypto/tls"
 	"encoding/json"
@@ -46,6 +47,7 @@ type CLIOptions struct {
 	wsreceive bool
 	wstemplate string
 	wsfields string
+	wscrlf bool
 }
 
 var cliops = CLIOptions{
@@ -56,6 +58,7 @@ var cliops = CLIOptions{
 				wsreceive: true,
 				wstemplate: "",
 				wsfields: "",
+				wscrlf: false,
 			}
 
 
@@ -67,6 +70,7 @@ func init() {
 			flag.PrintDefaults()
 			os.Exit(1)
 		}
+    flag.BoolVar(&cliops.wscrlf    ,   "crlf", cliops.wscrlf, "replace '\\n' with '\\r\\n' inside the data to be sent (true|false)")
     flag.StringVar(&cliops.wsfields,   "fields", cliops.wsfields, "name of the internal fields map or path to the json fields file")
     flag.StringVar(&cliops.wsfields,   "f", cliops.wsfields, "name of the internal fields map or path to the json fields file")
     flag.BoolVar(&cliops.wsinsecure,   "insecure", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
@@ -137,7 +141,13 @@ func main() {
 
 	var tpl = template.Must(template.New("wsout").Parse(tplstr))
 	tpl.Execute(&buf, tplfields)
-	wmsg := buf.Bytes()
+
+	var wmsg []byte
+	if cliops.wscrlf {
+		wmsg = []byte(strings.Replace(buf.String(), "\n", "\r\n", -1))
+	} else {
+		wmsg = buf.Bytes()
+	}
 
 	// open ws connection
 	// ws, err := websocket.Dial(wsurl, "", wsorigin)
