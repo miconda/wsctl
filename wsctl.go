@@ -84,7 +84,6 @@ func init() {
 }
 
 func main() {
-    fmt.Printf("starting websocket command line tool (argc: %d)!\n\n", len(os.Args))
 
     flag.Parse()
 
