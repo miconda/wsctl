@@ -80,6 +80,10 @@ The fields file has to contain a JSON document with the fields to be replaced in
 
 Sample template and fields files can be found inside subfolder "examples/".
 
+## Internals
+
+Sending data over websocket connection has a timeout of 10 seconds. Receiving data from websocket connection has a timeout of 20 seconds.
+
 ## Contributions
 
 Contributions are welcome! Fork and do pull requests on https://github.com/miconda/wsctl .
@@ -88,8 +92,6 @@ Contributions are welcome! Fork and do pull requests on https://github.com/micon
 
 Just some ideas for now, not all to be implemented:
 
-  * timeout for waiting the response from server
-  * send only option (don't wait for response from server)
   * open many websocket connections and send data (tool for stress testing)
   * replace '\n' with '\r\n' in template file (useful for templates with sip messages)
   * implement www-digest authentication for sip
