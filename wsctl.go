@@ -34,6 +34,7 @@ var sipTemplates = map[string]string {
 }
 
 var templateFields = map[string]map[string]interface{} {
+	"FIELDS:EMPTY": { },
 	"FIELDS:TEST": { "caller": "alice", "callee": "bob", },
 }
 
@@ -124,7 +125,11 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		tplfields = templateFields["FIELDS:TEST"]
+		if len(cliops.wstemplate) > 0 {
+			tplfields = templateFields["FIELDS:EMPTY"]
+		} else {
+			tplfields = templateFields["FIELDS:TEST"]
+		}
 	}
 
 	var tpl = template.Must(template.New("wsout").Parse(tplstr))
