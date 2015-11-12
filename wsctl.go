@@ -24,6 +24,8 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+const wsctlVersion = "1.0"
+
 var sipTemplates = map[string]string {
     "OPTIONS:TEST": "OPTIONS sip:{{.callee}}@127.0.0.1 SIP/2.0\r\n" +
 					"Via: SIP/2.0/WSS df7jal23ls0d.invalid;branch=z9hG4bKasudf-3696-24845-1\r\n" +
@@ -48,6 +50,7 @@ type CLIOptions struct {
 	wstemplate string
 	wsfields string
 	wscrlf bool
+	version bool
 }
 
 var cliops = CLIOptions{
@@ -59,13 +62,14 @@ var cliops = CLIOptions{
 				wstemplate: "",
 				wsfields: "",
 				wscrlf: false,
+				version: false,
 			}
 
 
 func init() {
 	// command line arguments
 	flag.Usage = func() {
-			fmt.Fprintf(os.Stderr, "Usage of %s (v1.0):\n", filepath.Base(os.Args[0]))
+			fmt.Fprintf(os.Stderr, "Usage of %s (v%s):\n", filepath.Base(os.Args[0]), wsctlVersion)
 			fmt.Fprintf(os.Stderr, "    (each option has short and long version)\n")
 			flag.PrintDefaults()
 			os.Exit(1)
@@ -85,11 +89,17 @@ func init() {
     flag.StringVar(&cliops.wstemplate, "t", cliops.wstemplate, "name of internal template or path to template file")
     flag.StringVar(&cliops.wsurl,      "url", cliops.wsurl, "websocket url (ws://... or wss://...)")
     flag.StringVar(&cliops.wsurl,      "u", cliops.wsurl, "websocket url (ws://... or wss://...)")
+    flag.BoolVar(&cliops.version,       "version", cliops.version, "print version")
 }
 
 func main() {
 
     flag.Parse()
+
+	if cliops.version {
+		fmt.Printf("%s v%s\n", filepath.Base(os.Args[0]), wsctlVersion)
+		os.Exit(1)
+	}
 
 	// options for ws connections
 	urlp, err := url.Parse(cliops.wsurl)
