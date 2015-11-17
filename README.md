@@ -13,6 +13,8 @@ While the common use case for websocket connections is between web browser and w
 
 It was developed and tested for sending SIP requests over websocket to Kamailio SIP Server (http://www.kamailio.org), but the data can be any format.
 
+For SIP over websocket, it can do www-digest authentication if the server challenges with a 401/407 response.
+
 ## Install
 
 First install Go (http://golang.org). Once the Go environment is configured, the websocket package must be fetched locally:
@@ -62,6 +64,16 @@ go run wsctl.go \
    --fields=examples/fld-options-aa.json
 ```
 
+To provide username and password for www-digest authentication of SIP requests:
+
+```
+go run wsctl.go \
+   --url='wss://myserver.com:8443/ws' \
+   --template=examples/tpl-options-aa.sip \
+   --fields=examples/fld-options-aa.json \
+   --auser='test' --apasswd='secret'
+```
+
 For websocket secure connections (wss), by default it skips server's TLS certificate verification. To enforce certificate verification add the command line option '--insecure=false'.
 
 The http url for Origin header can be set with option '--origin=...'.
@@ -92,7 +104,8 @@ Contributions are welcome! Fork and do pull requests on https://github.com/micon
 
 Just some ideas for now, not all to be implemented:
 
-  * open many websocket connections and send data (tool for stress testing)
-  * implement www-digest authentication for sip
+  * open many websocket connections at once and send data on all of them (tool for stress testing)
+  * option to specify some of the command line parameters via fields file (e.g., auth username, password)
+  * support to work with an array of templates and fields files
 
 Suggestions for what to add are welcome as well!
