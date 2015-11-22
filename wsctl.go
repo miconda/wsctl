@@ -2,107 +2,113 @@
  * WebSocket Command Line Tool
  * (C) Copyright 2015 Daniel-Constantin Mierla (asipto.com)
  * License: GPLv2
- * 
  */
+
 package main
 
 import (
 	"bytes"
-	"flag"
-	"fmt"
-	"io"
-	"log"
-	"os"
-	"strconv"
-	"strings"
-	"time"
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
+	"flag"
+	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"text/template"
+	"time"
+
 	"golang.org/x/net/websocket"
 )
 
 const wsctlVersion = "1.0"
 
-var sipTemplates = map[string]string {
-    "OPTIONS:TEST": "OPTIONS sip:{{.callee}}@127.0.0.1 SIP/2.0\r\n" +
-					"Via: SIP/2.0/WSS df7jal23ls0d.invalid;branch=z9hG4bKasudf-3696-24845-1\r\n" +
-					"From: '{{.caller}}' <sip:{{.caller}}@127.0.0.1>;tag=3696-0024845\r\n" +
-					"To: '{{.callee}}' <sip:{{.callee}}@127.0.0.1>\r\n" +
-					"Call-ID: 24845-3696@127.0.0.1\r\n" +
-					"CSeq: 2 OPTIONS\r\n" +
-					"Content-Length: 0\r\n\r\n",
+var sipTemplates = map[string]string{
+	"OPTIONS:TEST": "OPTIONS sip:{{.callee}}@127.0.0.1 SIP/2.0\r\n" +
+		"Via: SIP/2.0/WSS df7jal23ls0d.invalid;branch=z9hG4bKasudf-3696-24845-1\r\n" +
+		"From: '{{.caller}}' <sip:{{.caller}}@127.0.0.1>;tag=3696-0024845\r\n" +
+		"To: '{{.callee}}' <sip:{{.callee}}@127.0.0.1>\r\n" +
+		"Call-ID: 24845-3696@127.0.0.1\r\n" +
+		"CSeq: 2 OPTIONS\r\n" +
+		"Content-Length: 0\r\n\r\n",
 }
 
-var templateFields = map[string]map[string]interface{} {
-	"FIELDS:EMPTY": { },
-	"FIELDS:TEST": { "caller": "alice", "callee": "bob", },
+var templateFields = map[string]map[string]interface{}{
+	"FIELDS:EMPTY": {},
+	"FIELDS:TEST":  {"caller": "alice", "callee": "bob"},
 }
 
+//
+// CLIOptions - structure for command line options
 type CLIOptions struct {
-	wsurl string
-	wsorigin string
-	wsproto	string
+	wsurl      string
+	wsorigin   string
+	wsproto    string
 	wsinsecure bool
-	wsreceive bool
+	wsreceive  bool
 	wstemplate string
-	wsfields string
-	wscrlf bool
-	version bool
-	wsauser string
-	wsapasswd string
+	wsfields   string
+	wscrlf     bool
+	version    bool
+	wsauser    string
+	wsapasswd  string
 }
 
 var cliops = CLIOptions{
-				wsurl: "wss://127.0.0.1:8443",
-				wsorigin: "http://127.0.0.1",
-				wsproto: "sip",
-				wsinsecure: true,
-				wsreceive: true,
-				wstemplate: "",
-				wsfields: "",
-				wscrlf: false,
-				version: false,
-				wsauser: "",
-				wsapasswd: "",
-			}
+	wsurl:      "wss://127.0.0.1:8443",
+	wsorigin:   "http://127.0.0.1",
+	wsproto:    "sip",
+	wsinsecure: true,
+	wsreceive:  true,
+	wstemplate: "",
+	wsfields:   "",
+	wscrlf:     false,
+	version:    false,
+	wsauser:    "",
+	wsapasswd:  "",
+}
 
-
+//
+// initialize application components
 func init() {
 	// command line arguments
 	flag.Usage = func() {
-			fmt.Fprintf(os.Stderr, "Usage of %s (v%s):\n", filepath.Base(os.Args[0]), wsctlVersion)
-			fmt.Fprintf(os.Stderr, "    (each option has short and long version)\n")
-			flag.PrintDefaults()
-			os.Exit(1)
-		}
-	flag.StringVar(&cliops.wsauser,    "auser", cliops.wsauser, "username to be used for authentication")
-	flag.StringVar(&cliops.wsapasswd,  "apasswd", cliops.wsapasswd, "password to be used for authentication")
-	flag.BoolVar(&cliops.wscrlf    ,   "crlf", cliops.wscrlf, "replace '\\n' with '\\r\\n' inside the data to be sent (true|false)")
-	flag.StringVar(&cliops.wsfields,   "fields", cliops.wsfields, "name of the internal fields map or path to the json fields file")
-	flag.StringVar(&cliops.wsfields,   "f", cliops.wsfields, "name of the internal fields map or path to the json fields file")
-	flag.BoolVar(&cliops.wsinsecure,   "insecure", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
-	flag.BoolVar(&cliops.wsinsecure,   "i", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
-	flag.StringVar(&cliops.wsorigin,   "origin", cliops.wsorigin, "origin http url")
-	flag.StringVar(&cliops.wsorigin,   "o", cliops.wsorigin, "origin http url")
-	flag.StringVar(&cliops.wsproto,    "proto", cliops.wsproto, "websocket sub-protocol")
-	flag.StringVar(&cliops.wsproto,    "p", cliops.wsproto, "websocket sub-protocol")
-	flag.BoolVar(&cliops.wsreceive,    "receive", cliops.wsreceive, "wait to receive response from ws server (true|false)")
-	flag.BoolVar(&cliops.wsreceive,    "r", cliops.wsreceive, "wait to receive response from ws server (true|false)")
+		fmt.Fprintf(os.Stderr, "Usage of %s (v%s):\n", filepath.Base(os.Args[0]), wsctlVersion)
+		fmt.Fprintf(os.Stderr, "    (each option has short and long version)\n")
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+	flag.StringVar(&cliops.wsauser, "auser", cliops.wsauser, "username to be used for authentication")
+	flag.StringVar(&cliops.wsapasswd, "apasswd", cliops.wsapasswd, "password to be used for authentication")
+	flag.BoolVar(&cliops.wscrlf, "crlf", cliops.wscrlf, "replace '\\n' with '\\r\\n' inside the data to be sent (true|false)")
+	flag.StringVar(&cliops.wsfields, "fields", cliops.wsfields, "name of the internal fields map or path to the json fields file")
+	flag.StringVar(&cliops.wsfields, "f", cliops.wsfields, "name of the internal fields map or path to the json fields file")
+	flag.BoolVar(&cliops.wsinsecure, "insecure", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
+	flag.BoolVar(&cliops.wsinsecure, "i", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
+	flag.StringVar(&cliops.wsorigin, "origin", cliops.wsorigin, "origin http url")
+	flag.StringVar(&cliops.wsorigin, "o", cliops.wsorigin, "origin http url")
+	flag.StringVar(&cliops.wsproto, "proto", cliops.wsproto, "websocket sub-protocol")
+	flag.StringVar(&cliops.wsproto, "p", cliops.wsproto, "websocket sub-protocol")
+	flag.BoolVar(&cliops.wsreceive, "receive", cliops.wsreceive, "wait to receive response from ws server (true|false)")
+	flag.BoolVar(&cliops.wsreceive, "r", cliops.wsreceive, "wait to receive response from ws server (true|false)")
 	flag.StringVar(&cliops.wstemplate, "template", cliops.wstemplate, "name of internal template or path to template file")
 	flag.StringVar(&cliops.wstemplate, "t", cliops.wstemplate, "name of internal template or path to template file")
-	flag.StringVar(&cliops.wsurl,      "url", cliops.wsurl, "websocket url (ws://... or wss://...)")
-	flag.StringVar(&cliops.wsurl,      "u", cliops.wsurl, "websocket url (ws://... or wss://...)")
-	flag.BoolVar(&cliops.version,       "version", cliops.version, "print version")
+	flag.StringVar(&cliops.wsurl, "url", cliops.wsurl, "websocket url (ws://... or wss://...)")
+	flag.StringVar(&cliops.wsurl, "u", cliops.wsurl, "websocket url (ws://... or wss://...)")
+	flag.BoolVar(&cliops.version, "version", cliops.version, "print version")
 }
 
+//
+// wsctl application
 func main() {
 
 	flag.Parse()
@@ -125,15 +131,15 @@ func main() {
 	}
 
 	tlc := tls.Config{
-			InsecureSkipVerify: false,
-		}
+		InsecureSkipVerify: false,
+	}
 	if cliops.wsinsecure {
 		tlc.InsecureSkipVerify = true
 	}
 
 	// buffer to send over ws connction
 	var buf bytes.Buffer
-	var tplstr = "";
+	var tplstr = ""
 	if len(cliops.wstemplate) > 0 {
 		tpldata, err := ioutil.ReadFile(cliops.wstemplate)
 		if err != nil {
@@ -175,13 +181,13 @@ func main() {
 	// open ws connection
 	// ws, err := websocket.Dial(wsurl, "", wsorigin)
 	ws, err := websocket.DialConfig(&websocket.Config{
-						Location: urlp,
-						Origin: orgp,
-						Protocol: []string{cliops.wsproto},
-						Version: 13,
-						TlsConfig: &tlc,
-						Header: http.Header{"User-Agent": {"wsctl"}},
-					})
+		Location:  urlp,
+		Origin:    orgp,
+		Protocol:  []string{cliops.wsproto},
+		Version:   13,
+		TlsConfig: &tlc,
+		Header:    http.Header{"User-Agent": {"wsctl"}},
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -203,16 +209,15 @@ func main() {
 			log.Fatal(err)
 		}
 		fmt.Printf("Receiving (%d bytes):\n[[%s]]\n", n, rmsg)
-		if(n>24 && cliops.wsproto=="sip") {
+		if n > 24 && cliops.wsproto == "sip" {
 			ManageSIPResponse(ws, wmsg, rmsg)
 		}
 	}
 }
 
-/**
- * Parse www/proxy-authenticate header body.
- * Return a map of parameters or nil if the header is not Digest auth header.
-*/
+//
+// ParseAuthHeader - parse www/proxy-authenticate header body.
+// Return a map of parameters or nil if the header is not Digest auth header.
 func ParseAuthHeader(hbody []byte) map[string]string {
 	s := strings.SplitN(strings.Trim(string(hbody), " "), " ", 2)
 	if len(s) != 2 || s[0] != "Digest" {
@@ -230,41 +235,42 @@ func ParseAuthHeader(hbody []byte) map[string]string {
 	return params
 }
 
-func BuildAuthResponseHeader(username string, password string, hparams map[string]string) (string) {
-		// https://en.wikipedia.org/wiki/Digest_access_authentication
-		// HA1
-		h := md5.New()
-		A1 := fmt.Sprintf("%s:%s:%s", username, hparams["realm"], password)
-		io.WriteString(h, A1)
-		HA1 := fmt.Sprintf("%x", h.Sum(nil))
+//
+// BuildAuthResponseHeader - return the body for auth header in response
+func BuildAuthResponseHeader(username string, password string, hparams map[string]string) string {
+	// https://en.wikipedia.org/wiki/Digest_access_authentication
+	// HA1
+	h := md5.New()
+	A1 := fmt.Sprintf("%s:%s:%s", username, hparams["realm"], password)
+	io.WriteString(h, A1)
+	HA1 := fmt.Sprintf("%x", h.Sum(nil))
 
-		// HA2
-		h = md5.New()
-		A2 := fmt.Sprintf("%s:%s", hparams["method"], hparams["uri"])
-		io.WriteString(h, A2)
-		HA2 := fmt.Sprintf("%x", h.Sum(nil))
+	// HA2
+	h = md5.New()
+	A2 := fmt.Sprintf("%s:%s", hparams["method"], hparams["uri"])
+	io.WriteString(h, A2)
+	HA2 := fmt.Sprintf("%x", h.Sum(nil))
 
-		AuthHeader := ""
-		if _, ok:= hparams["qop"]; !ok {
-			// build digest response
-			response := HMD5(strings.Join([]string{HA1, hparams["nonce"], HA2}, ":"))
-			// build header body
-			AuthHeader = fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", algorithm=MD5, response="%s"`,
-					username, hparams["realm"], hparams["nonce"], hparams["uri"], response)
-		} else {
-			// build digest response
-			cnonce := RandomKey()
-			response := HMD5(strings.Join([]string{HA1, hparams["nonce"], "00000001", cnonce, hparams["qop"], HA2}, ":"))
-			// build header body
-			AuthHeader = fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", cnonce="%s", nc=00000001, qop=%s, opaque="%s", algorithm=MD5, response="%s"`,
-					username, hparams["realm"], hparams["nonce"], hparams["uri"], cnonce, hparams["qop"], hparams["opaque"], response)
-		}
-		return AuthHeader;
+	AuthHeader := ""
+	if _, ok := hparams["qop"]; !ok {
+		// build digest response
+		response := HMD5(strings.Join([]string{HA1, hparams["nonce"], HA2}, ":"))
+		// build header body
+		AuthHeader = fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", algorithm=MD5, response="%s"`,
+			username, hparams["realm"], hparams["nonce"], hparams["uri"], response)
+	} else {
+		// build digest response
+		cnonce := RandomKey()
+		response := HMD5(strings.Join([]string{HA1, hparams["nonce"], "00000001", cnonce, hparams["qop"], HA2}, ":"))
+		// build header body
+		AuthHeader = fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", cnonce="%s", nc=00000001, qop=%s, opaque="%s", algorithm=MD5, response="%s"`,
+			username, hparams["realm"], hparams["nonce"], hparams["uri"], cnonce, hparams["qop"], hparams["opaque"], response)
+	}
+	return AuthHeader
 }
 
-/**
- * Return random key (used for cnonce)
- */
+//
+// RandomKey - return random key (used for cnonce)
 func RandomKey() string {
 	key := make([]byte, 12)
 	for b := 0; b < len(key); {
@@ -277,32 +283,30 @@ func RandomKey() string {
 	return base64.StdEncoding.EncodeToString(key)
 }
 
-/**
- * Return a lower-case hex MD5 digest of the parameter
- */
+//
+// HMD5 - return a lower-case hex MD5 digest of the parameter
 func HMD5(data string) string {
 	md5d := md5.New()
 	md5d.Write([]byte(data))
 	return fmt.Sprintf("%x", md5d.Sum(nil))
 }
 
-/**
- * Manage SIP response
- * - if was a 401/407, follow up with authentication request
- */
+//
+// ManageSIPResponse - process a SIP response
+// - if was a 401/407, follow up with authentication request
 func ManageSIPResponse(ws *websocket.Conn, wmsg []byte, rmsg []byte) bool {
 	if cliops.wsapasswd == "" {
 		return false
 	}
 	// www or proxy authentication
 	hname := ""
-	if (bytes.HasPrefix(rmsg, []byte("SIP/2.0 401 "))) {
+	if bytes.HasPrefix(rmsg, []byte("SIP/2.0 401 ")) {
 		hname = "WWW-Authenticate:"
-	} else if (bytes.HasPrefix(rmsg, []byte("SIP/2.0 407 "))) {
+	} else if bytes.HasPrefix(rmsg, []byte("SIP/2.0 407 ")) {
 		hname = "Proxy-Authenticate:"
 	}
 	n := bytes.Index(rmsg, []byte(hname))
-	if (n<0) {
+	if n < 0 {
 		return false
 	}
 	hbody := bytes.Trim(rmsg[n:n+bytes.Index(rmsg[n:], []byte("\n"))], " \t\r")
@@ -311,7 +315,7 @@ func ManageSIPResponse(ws *websocket.Conn, wmsg []byte, rmsg []byte) bool {
 		return false
 	}
 	auser := "test"
-	if cliops.wsauser!="" {
+	if cliops.wsauser != "" {
 		auser = cliops.wsauser
 	}
 
@@ -327,9 +331,9 @@ func ManageSIPResponse(ws *websocket.Conn, wmsg []byte, rmsg []byte) bool {
 
 	// build new request - increase CSeq and insert auth header
 	n = bytes.Index(wmsg, []byte("CSeq:"))
-	if (n<0) {
+	if n < 0 {
 		n = bytes.Index(wmsg, []byte("s:"))
-		if (n<0) {
+		if n < 0 {
 			return false
 		}
 	}
@@ -344,7 +348,7 @@ func ManageSIPResponse(ws *websocket.Conn, wmsg []byte, rmsg []byte) bool {
 	cs := strconv.Itoa(1 + csn)
 
 	obuf.WriteString("CSeq: " + cs + " " + s[2] + "\r\n")
-	if hname[0]=='W' {
+	if hname[0] == 'W' {
 		obuf.WriteString("Authorization: ")
 	} else {
 		obuf.WriteString("Proxy-Authorization: ")
