@@ -31,7 +31,7 @@ go get -v -u github.com/miconda/wsctl
 
 ### Run
 
-Navivate to the project folder and run:
+Navigate to the project folder and run:
 
 ```
 go run wsctl.go [options]
