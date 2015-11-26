@@ -43,7 +43,7 @@ Or install the application:
 go install github.com/miconda/wsctl
 ```
 
-And the run:
+And then execute:
 
 ```
 $GOPATH/bin/wsctl [options]
@@ -76,9 +76,9 @@ go run wsctl.go \
 
 For websocket secure connections (wss), by default it skips server's TLS certificate verification. To enforce certificate verification add the command line option '--insecure=false'.
 
-The http url for Origin header can be set with option '--origin=...'.
+The HTTP URL for Origin header can be set with option '--origin=...'.
 
-The websocket subprotocol can be set with option '--protocol=...'.
+The websocket subprotocol can be set with option '--protocol=...'. Default is 'sip'.
 
 ## Data Templates
 
