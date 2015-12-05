@@ -7,7 +7,7 @@ License: GPLv2
 
 **wsctl** is a websocket client to be used from command line. It is written in Go (Golang).
 
-While the common use case for websocket connections is between web browser and web server, there are situations where is more convenient to use a command line (e.g., testing).
+While the common use case for websocket connections is between web browser and web server, there are situations where is more convenient to use a command line (e.g., testing, monitoring).
 
 **wsctl** can send data loaded from a template file to a websocket server and it will print the response received from the server.
 
@@ -53,9 +53,11 @@ $GOPATH/bin/wsctl [options]
 
 If run with option '-h' or '--help', it will print the help message.
 
-If run without any option, it attempts to send a SIP OPTIONS request to wss://127.0.0.1:8443.
+The parameter '--template' (short form '-t') is mandatory - it is used to provide the path to template file. More details about template files are provided in the next section.
 
-To run using external template and fields files, to send data to a particular WS server over secure connection:
+The parameter '--url' can be used to set the URL to websocket server, if not provided, its value is 'wss://127.0.0.1:8443'.
+
+Next is an example of running wsctl by using external template and fields files, to send data to a particular WS server over secure connection:
 
 ```
 go run wsctl.go \
@@ -76,7 +78,7 @@ go run wsctl.go \
 
 For websocket secure connections (wss), by default it skips server's TLS certificate verification. To enforce certificate verification add the command line option '--insecure=false'.
 
-The HTTP URL for Origin header can be set with option '--origin=...'.
+The HTTP URL for Origin header can be set with option '--origin=...'. Its default value is 'http://127.0.0.1'.
 
 The websocket subprotocol can be set with option '--protocol=...'. Default is 'sip'.
 
