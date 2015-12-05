@@ -32,19 +32,8 @@ import (
 
 const wsctlVersion = "1.0"
 
-var sipTemplates = map[string]string{
-	"OPTIONS:TEST": "OPTIONS sip:{{.callee}}@127.0.0.1 SIP/2.0\r\n" +
-		"Via: SIP/2.0/WSS df7jal23ls0d.invalid;branch=z9hG4bKasudf-3696-24845-1\r\n" +
-		"From: '{{.caller}}' <sip:{{.caller}}@127.0.0.1>;tag=3696-0024845\r\n" +
-		"To: '{{.callee}}' <sip:{{.callee}}@127.0.0.1>\r\n" +
-		"Call-ID: 24845-3696@127.0.0.1\r\n" +
-		"CSeq: 2 OPTIONS\r\n" +
-		"Content-Length: 0\r\n\r\n",
-}
-
 var templateFields = map[string]map[string]interface{}{
 	"FIELDS:EMPTY": {},
-	"FIELDS:TEST":  {"caller": "alice", "callee": "bob"},
 }
 
 //
@@ -90,8 +79,8 @@ func init() {
 	flag.StringVar(&cliops.wsauser, "auser", cliops.wsauser, "username to be used for authentication")
 	flag.StringVar(&cliops.wsapasswd, "apasswd", cliops.wsapasswd, "password to be used for authentication")
 	flag.BoolVar(&cliops.wscrlf, "crlf", cliops.wscrlf, "replace '\\n' with '\\r\\n' inside the data to be sent (true|false)")
-	flag.StringVar(&cliops.wsfields, "fields", cliops.wsfields, "name of the internal fields map or path to the json fields file")
-	flag.StringVar(&cliops.wsfields, "f", cliops.wsfields, "name of the internal fields map or path to the json fields file")
+	flag.StringVar(&cliops.wsfields, "fields", cliops.wsfields, "path to the json fields file")
+	flag.StringVar(&cliops.wsfields, "f", cliops.wsfields, "path to the json fields file")
 	flag.BoolVar(&cliops.wsinsecure, "insecure", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
 	flag.BoolVar(&cliops.wsinsecure, "i", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
 	flag.StringVar(&cliops.wsorigin, "origin", cliops.wsorigin, "origin http url")
@@ -100,8 +89,8 @@ func init() {
 	flag.StringVar(&cliops.wsproto, "p", cliops.wsproto, "websocket sub-protocol")
 	flag.BoolVar(&cliops.wsreceive, "receive", cliops.wsreceive, "wait to receive response from ws server (true|false)")
 	flag.BoolVar(&cliops.wsreceive, "r", cliops.wsreceive, "wait to receive response from ws server (true|false)")
-	flag.StringVar(&cliops.wstemplate, "template", cliops.wstemplate, "name of internal template or path to template file")
-	flag.StringVar(&cliops.wstemplate, "t", cliops.wstemplate, "name of internal template or path to template file")
+	flag.StringVar(&cliops.wstemplate, "template", cliops.wstemplate, "path to template file (mandatory parameter)")
+	flag.StringVar(&cliops.wstemplate, "t", cliops.wstemplate, "path to template file (mandatory parameter)")
 	flag.StringVar(&cliops.wsurl, "url", cliops.wsurl, "websocket url (ws://... or wss://...)")
 	flag.StringVar(&cliops.wsurl, "u", cliops.wsurl, "websocket url (ws://... or wss://...)")
 	flag.BoolVar(&cliops.version, "version", cliops.version, "print version")
@@ -147,7 +136,7 @@ func main() {
 		}
 		tplstr = string(tpldata)
 	} else {
-		tplstr = sipTemplates["OPTIONS:TEST"]
+		log.Fatal("missing data template file ('-t' or '--template' parameter must be provided)")
 	}
 
 	var tplfields interface{}
@@ -161,11 +150,7 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		if len(cliops.wstemplate) > 0 {
-			tplfields = templateFields["FIELDS:EMPTY"]
-		} else {
-			tplfields = templateFields["FIELDS:TEST"]
-		}
+		tplfields = templateFields["FIELDS:EMPTY"]
 	}
 
 	var tpl = template.Must(template.New("wsout").Parse(tplstr))
