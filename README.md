@@ -106,6 +106,7 @@ Contributions are welcome! Fork and do pull requests on https://github.com/micon
 
 Just some ideas for now, not all to be implemented:
 
+  * add parameters for send/receive timeouts
   * open many websocket connections at once and send data on all of them (tool for stress testing)
   * option to specify some of the command line parameters via fields file (e.g., auth username, password)
   * support to work with an array of templates and fields files
