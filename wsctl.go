@@ -39,31 +39,35 @@ var templateFields = map[string]map[string]interface{}{
 //
 // CLIOptions - structure for command line options
 type CLIOptions struct {
-	wsurl      string
-	wsorigin   string
-	wsproto    string
-	wsinsecure bool
-	wsreceive  bool
-	wstemplate string
-	wsfields   string
-	wscrlf     bool
-	version    bool
-	wsauser    string
-	wsapasswd  string
+	wsurl         string
+	wsorigin      string
+	wsproto       string
+	wsinsecure    bool
+	wsreceive     bool
+	wstemplate    string
+	wsfields      string
+	wscrlf        bool
+	version       bool
+	wsauser       string
+	wsapasswd     string
+	wstimeoutrecv int
+	wstimeoutsend int
 }
 
 var cliops = CLIOptions{
-	wsurl:      "wss://127.0.0.1:8443",
-	wsorigin:   "http://127.0.0.1",
-	wsproto:    "sip",
-	wsinsecure: true,
-	wsreceive:  true,
-	wstemplate: "",
-	wsfields:   "",
-	wscrlf:     false,
-	version:    false,
-	wsauser:    "",
-	wsapasswd:  "",
+	wsurl:         "wss://127.0.0.1:8443",
+	wsorigin:      "http://127.0.0.1",
+	wsproto:       "sip",
+	wsinsecure:    true,
+	wsreceive:     true,
+	wstemplate:    "",
+	wsfields:      "",
+	wscrlf:        false,
+	version:       false,
+	wsauser:       "",
+	wsapasswd:     "",
+	wstimeoutrecv: 20000,
+	wstimeoutsend: 10000,
 }
 
 //
@@ -94,6 +98,8 @@ func init() {
 	flag.StringVar(&cliops.wsurl, "url", cliops.wsurl, "websocket url (ws://... or wss://...)")
 	flag.StringVar(&cliops.wsurl, "u", cliops.wsurl, "websocket url (ws://... or wss://...)")
 	flag.BoolVar(&cliops.version, "version", cliops.version, "print version")
+	flag.IntVar(&cliops.wstimeoutrecv, "timeout-recv", cliops.wstimeoutrecv, "timeout waiting to receive data (milliseconds)")
+	flag.IntVar(&cliops.wstimeoutsend, "timeout-send", cliops.wstimeoutsend, "timeout trying to send data (milliseconds)")
 }
 
 //
@@ -178,7 +184,7 @@ func main() {
 	}
 
 	// send data to ws server
-	err = ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	err = ws.SetWriteDeadline(time.Now().Add(time.Duration(cliops.wstimeoutsend) * time.Millisecond))
 	_, err = ws.Write(wmsg)
 	if err != nil {
 		log.Fatal(err)
@@ -188,7 +194,7 @@ func main() {
 	// receive data from ws server
 	if cliops.wsreceive {
 		var rmsg = make([]byte, 8192)
-		err = ws.SetReadDeadline(time.Now().Add(20 * time.Second))
+		err = ws.SetReadDeadline(time.Now().Add(time.Duration(cliops.wstimeoutrecv) * time.Millisecond))
 		n, err := ws.Read(rmsg)
 		if err != nil {
 			log.Fatal(err)
