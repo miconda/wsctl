@@ -96,7 +96,7 @@ Sample template and fields files can be found inside subfolder "examples/".
 
 ## Internals
 
-Sending data over websocket connection has a timeout of 10 seconds. Receiving data from websocket connection has a timeout of 20 seconds.
+Sending data over websocket connection has a timeout of 10 seconds. Receiving data from websocket connection has a timeout of 20 seconds. These values can be changed via command line parameters.
 
 ## Contributions
 
@@ -106,7 +106,6 @@ Contributions are welcome! Fork and do pull requests on https://github.com/micon
 
 Just some ideas for now, not all to be implemented:
 
-  * add parameters for send/receive timeouts
   * open many websocket connections at once and send data on all of them (tool for stress testing)
   * option to specify some of the command line parameters via fields file (e.g., auth username, password)
   * support to work with an array of templates and fields files
