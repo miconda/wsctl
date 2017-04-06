@@ -136,8 +136,8 @@ func main() {
 	var buf bytes.Buffer
 	var tplstr = ""
 	if len(cliops.wstemplate) > 0 {
-		tpldata, err := ioutil.ReadFile(cliops.wstemplate)
-		if err != nil {
+		tpldata, err1 := ioutil.ReadFile(cliops.wstemplate)
+		if err1 != nil {
 			log.Fatal(err)
 		}
 		tplstr = string(tpldata)
@@ -147,8 +147,8 @@ func main() {
 
 	var tplfields interface{}
 	if len(cliops.wsfields) > 0 {
-		fieldsdata, err := ioutil.ReadFile(cliops.wsfields)
-		if err != nil {
+		fieldsdata, err1 := ioutil.ReadFile(cliops.wsfields)
+		if err1 != nil {
 			log.Fatal(err)
 		}
 		err = json.Unmarshal(fieldsdata, &tplfields)
@@ -185,6 +185,9 @@ func main() {
 
 	// send data to ws server
 	err = ws.SetWriteDeadline(time.Now().Add(time.Duration(cliops.wstimeoutsend) * time.Millisecond))
+	if err != nil {
+		log.Fatal(err)
+	}
 	_, err = ws.Write(wmsg)
 	if err != nil {
 		log.Fatal(err)
@@ -195,6 +198,9 @@ func main() {
 	if cliops.wsreceive {
 		var rmsg = make([]byte, 8192)
 		err = ws.SetReadDeadline(time.Now().Add(time.Duration(cliops.wstimeoutrecv) * time.Millisecond))
+		if err != nil {
+			log.Fatal(err)
+		}
 		n, err := ws.Read(rmsg)
 		if err != nil {
 			log.Fatal(err)
@@ -242,7 +248,7 @@ func BuildAuthResponseHeader(username string, password string, hparams map[strin
 	io.WriteString(h, A2)
 	HA2 := fmt.Sprintf("%x", h.Sum(nil))
 
-	AuthHeader := ""
+	var AuthHeader string
 	if _, ok := hparams["qop"]; !ok {
 		// build digest response
 		response := HMD5(strings.Join([]string{HA1, hparams["nonce"], HA2}, ":"))
