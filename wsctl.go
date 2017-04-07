@@ -212,9 +212,9 @@ func main() {
 	}
 	localAddr := ws.LocalAddr()
 	remoteAddr := ws.RemoteAddr()
-	fmt.Printf("Sending (%d bytes) -- %s => %s :\n[[%s]]\n", len(wmsg), localAddr.String(), remoteAddr.String(), wmsg)
+	fmt.Printf("[%s] ** snd (%d bytes)\n    -- %s => %s --\n%s\n", time.Now(), len(wmsg), localAddr.String(), remoteAddr.String(), wmsg)
 	if cliops.wsoutputfile != "" {
-		fmt.Fprintf(outputFile, "Sending (%d bytes) -- %s => %s :\n%s\n\n", len(wmsg), localAddr.String(), remoteAddr.String(), wmsg)
+		fmt.Fprintf(outputFile, "[%s] ** snd (%d bytes)\n    -- %s => %s --\n%s\n\n", time.Now(), len(wmsg), localAddr.String(), remoteAddr.String(), wmsg)
 	}
 
 	// receive data from ws server
@@ -228,9 +228,9 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Receiving (%d bytes) -- %s => %s :\n[[%s]]\n", n, remoteAddr.String(), localAddr.String(), rmsg)
+		fmt.Printf("[%s] ** rcv (%d bytes)\n    -- %s => %s --\n%s\n", time.Now(), n, remoteAddr.String(), localAddr.String(), rmsg)
 		if cliops.wsoutputfile != "" {
-			fmt.Fprintf(outputFile, "Receiving (%d bytes) -- %s => %s :\n%s\n\n", n, remoteAddr.String(), localAddr.String(), rmsg)
+			fmt.Fprintf(outputFile, "[%s] ** rcv (%d bytes)\n    -- %s => %s --\n%s\n\n", time.Now(), n, remoteAddr.String(), localAddr.String(), rmsg)
 		}
 		if n > 24 && cliops.wsproto == "sip" {
 			ManageSIPResponse(ws, wmsg, rmsg)
@@ -387,9 +387,9 @@ func ManageSIPResponse(ws *websocket.Conn, wmsg []byte, rmsg []byte) bool {
 	}
 	localAddr := ws.LocalAddr()
 	remoteAddr := ws.RemoteAddr()
-	fmt.Printf("Resending (%d bytes) -- %s => %s :\n[[%s]]\n", obuf.Len(), localAddr.String(), remoteAddr.String(), obuf.Bytes())
+	fmt.Printf("[%s] ** snd (%d bytes)\n    -- %s => %s --\n%s\n", time.Now(), obuf.Len(), localAddr.String(), remoteAddr.String(), obuf.Bytes())
 	if cliops.wsoutputfile != "" {
-		fmt.Fprintf(outputFile, "Sending (%d bytes) -- %s => %s :\n%s\n\n", obuf.Len(), localAddr.String(), remoteAddr.String(), obuf.Bytes())
+		fmt.Fprintf(outputFile, "[%s] ** snd (%d bytes)\n    -- %s => %s --\n%s\n\n", time.Now(), obuf.Len(), localAddr.String(), remoteAddr.String(), obuf.Bytes())
 	}
 
 	// receive data from ws server
@@ -399,9 +399,9 @@ func ManageSIPResponse(ws *websocket.Conn, wmsg []byte, rmsg []byte) bool {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Receiving: (%d bytes) -- %s => %s :\n[[%s]]\n", n, remoteAddr.String(), localAddr.String(), imsg)
+		fmt.Printf("[%s] ** rcv (%d bytes)\n    -- %s => %s --\n%s\n", time.Now(), n, remoteAddr.String(), localAddr.String(), imsg)
 		if cliops.wsoutputfile != "" {
-			fmt.Fprintf(outputFile, "Receiving (%d bytes) -- %s => %s :\n%s\n\n", n, remoteAddr.String(), localAddr.String(), imsg)
+			fmt.Fprintf(outputFile, "[%s] ** rcv (%d bytes)\n    -- %s => %s --\n%s\n\n", time.Now(), n, remoteAddr.String(), localAddr.String(), imsg)
 		}
 	}
 
