@@ -122,6 +122,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// enable file name and line numbers in logging
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	// options for ws connections
 	urlp, err := url.Parse(cliops.wsurl)
 	if err != nil {
