@@ -3,6 +3,8 @@ WebSocket Command Line Tool
 
 License: GPLv2
 
+Copyright: Daniel-Constantin Mierla (Asipto, https://www.asipto.com)
+
 ## Overview
 
 **wsctl** is a websocket client to be used from command line. It is written in Go (Golang).
