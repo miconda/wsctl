@@ -52,6 +52,7 @@ type CLIOptions struct {
 	wsapasswd     string
 	wstimeoutrecv int
 	wstimeoutsend int
+	wsoutputfile  string
 }
 
 var cliops = CLIOptions{
@@ -68,7 +69,11 @@ var cliops = CLIOptions{
 	wsapasswd:     "",
 	wstimeoutrecv: 20000,
 	wstimeoutsend: 10000,
+	wsoutputfile:  "",
 }
+
+//
+var outputFile *os.File
 
 //
 // initialize application components
@@ -100,6 +105,8 @@ func init() {
 	flag.BoolVar(&cliops.version, "version", cliops.version, "print version")
 	flag.IntVar(&cliops.wstimeoutrecv, "timeout-recv", cliops.wstimeoutrecv, "timeout waiting to receive data (milliseconds)")
 	flag.IntVar(&cliops.wstimeoutsend, "timeout-send", cliops.wstimeoutsend, "timeout trying to send data (milliseconds)")
+	flag.StringVar(&cliops.wsoutputfile, "output-file", cliops.wsoutputfile, "path to the file where to store sent and received messages")
+	flag.StringVar(&cliops.wsoutputfile, "O", cliops.wsoutputfile, "path to the file where to store sent and received messages")
 }
 
 //
@@ -132,13 +139,21 @@ func main() {
 		tlc.InsecureSkipVerify = true
 	}
 
+	if cliops.wsoutputfile != "" {
+		outputFile, err = os.Create(cliops.wsoutputfile)
+		if err != nil {
+			log.Fatal("Cannot create file", err)
+		}
+		defer outputFile.Close()
+	}
+
 	// buffer to send over ws connction
 	var buf bytes.Buffer
 	var tplstr = ""
 	if len(cliops.wstemplate) > 0 {
 		tpldata, err1 := ioutil.ReadFile(cliops.wstemplate)
 		if err1 != nil {
-			log.Fatal(err)
+			log.Fatal(err1)
 		}
 		tplstr = string(tpldata)
 	} else {
@@ -149,7 +164,7 @@ func main() {
 	if len(cliops.wsfields) > 0 {
 		fieldsdata, err1 := ioutil.ReadFile(cliops.wsfields)
 		if err1 != nil {
-			log.Fatal(err)
+			log.Fatal(err1)
 		}
 		err = json.Unmarshal(fieldsdata, &tplfields)
 		if err != nil {
@@ -192,7 +207,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Sending (%d bytes):\n[[%s]]\n", len(wmsg), wmsg)
+	localAddr := ws.LocalAddr()
+	remoteAddr := ws.RemoteAddr()
+	fmt.Printf("Sending (%d bytes) -- %s => %s :\n[[%s]]\n", len(wmsg), localAddr.String(), remoteAddr.String(), wmsg)
+	if cliops.wsoutputfile != "" {
+		fmt.Fprintf(outputFile, "Sending (%d bytes) -- %s => %s :\n%s\n\n", len(wmsg), localAddr.String(), remoteAddr.String(), wmsg)
+	}
 
 	// receive data from ws server
 	if cliops.wsreceive {
@@ -205,7 +225,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Receiving (%d bytes):\n[[%s]]\n", n, rmsg)
+		fmt.Printf("Receiving (%d bytes) -- %s => %s :\n[[%s]]\n", n, remoteAddr.String(), localAddr.String(), rmsg)
+		if cliops.wsoutputfile != "" {
+			fmt.Fprintf(outputFile, "Receiving (%d bytes) -- %s => %s :\n%s\n\n", n, remoteAddr.String(), localAddr.String(), rmsg)
+		}
 		if n > 24 && cliops.wsproto == "sip" {
 			ManageSIPResponse(ws, wmsg, rmsg)
 		}
@@ -359,7 +382,12 @@ func ManageSIPResponse(ws *websocket.Conn, wmsg []byte, rmsg []byte) bool {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Resending (%d bytes):\n[[%s]]\n", obuf.Len(), obuf.Bytes())
+	localAddr := ws.LocalAddr()
+	remoteAddr := ws.RemoteAddr()
+	fmt.Printf("Resending (%d bytes) -- %s => %s :\n[[%s]]\n", obuf.Len(), localAddr.String(), remoteAddr.String(), obuf.Bytes())
+	if cliops.wsoutputfile != "" {
+		fmt.Fprintf(outputFile, "Sending (%d bytes) -- %s => %s :\n%s\n\n", obuf.Len(), localAddr.String(), remoteAddr.String(), obuf.Bytes())
+	}
 
 	// receive data from ws server
 	if cliops.wsreceive {
@@ -368,7 +396,10 @@ func ManageSIPResponse(ws *websocket.Conn, wmsg []byte, rmsg []byte) bool {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Receiving: (%d bytes)\n[[%s]]\n", n, imsg)
+		fmt.Printf("Receiving: (%d bytes) -- %s => %s :\n[[%s]]\n", n, remoteAddr.String(), localAddr.String(), imsg)
+		if cliops.wsoutputfile != "" {
+			fmt.Fprintf(outputFile, "Receiving (%d bytes) -- %s => %s :\n%s\n\n", n, remoteAddr.String(), localAddr.String(), imsg)
+		}
 	}
 
 	return true
