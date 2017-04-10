@@ -64,8 +64,8 @@ Next is an example of running wsctl by using external template and fields files,
 ```
 go run wsctl.go \
    --url='wss://myserver.com:8443/ws' \
-   --template=examples/tpl-options-aa.sip \
-   --fields=examples/fld-options-aa.json
+   --template=examples/options-aa-tpl.sip \
+   --fields=examples/options-aa-fld.json
 ```
 
 To provide username and password for www-digest authentication of SIP requests:
@@ -73,8 +73,8 @@ To provide username and password for www-digest authentication of SIP requests:
 ```
 go run wsctl.go \
    --url='wss://myserver.com:8443/ws' \
-   --template=examples/tpl-options-aa.sip \
-   --fields=examples/fld-options-aa.json \
+   --template=examples/options-aa-tpl.sip \
+   --fields=examples/options-aa-fld.json \
    --auser='test' --apasswd='secret'
 ```
 
