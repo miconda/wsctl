@@ -1,7 +1,7 @@
 # wsctl
 WebSocket Command Line Tool
 
-License: GPLv2
+License: `GPLv2`
 
 Copyright: Daniel-Constantin Mierla (Asipto, https://www.asipto.com)
 
@@ -53,9 +53,9 @@ $GOPATH/bin/wsctl [options]
 
 ## Command Line Options
 
-If run with option '-h' or '--help', it will print the help message.
+If run with option `-h` or `--help`, it will print the help message.
 
-The parameter '--template' (short form '-t') is mandatory - it is used to provide the path to template file. More details about template files are provided in the next section.
+The parameter `--template` (short form `-t`) is mandatory - it is used to provide the path to template file. More details about template files are provided in the next section.
 
 The parameter '--url' can be used to set the URL to websocket server, if not provided, its value is 'wss://127.0.0.1:8443'.
 
@@ -78,23 +78,23 @@ go run wsctl.go \
    --auser='test' --apasswd='secret'
 ```
 
-For websocket secure connections (wss), by default it skips server's TLS certificate verification. To enforce certificate verification add the command line option '--insecure=false'.
+For websocket secure connections (wss), by default it skips server's TLS certificate verification. To enforce certificate verification add the command line option `--insecure=false`.
 
-The HTTP URL for Origin header can be set with option '--origin=...'. Its default value is 'http://127.0.0.1'.
+The HTTP URL for Origin header can be set with option `--origin=...`. Its default value is `http://127.0.0.1`.
 
-The websocket subprotocol can be set with option '--protocol=...'. Default is 'sip'.
+The websocket subprotocol can be set with option `--protocol=...`. Default is `sip`.
 
 ## Data Templates
 
 The data to be sent via the websocket connection is built from a template file and a fields file.
 
-The template file can contain any any of the dirrectives supported by Go package "text/template" - for more see:
+The template file can contain any any of the dirrectives supported by Go package `text/template` - for more see:
 
   * https://golang.org/pkg/text/template/
 
 The fields file has to contain a JSON document with the fields to be replaced in the template file.
 
-Sample template and fields files can be found inside subfolder "examples/".
+Sample template and fields files can be found inside subfolder `examples/`.
 
 ## Internals
 
