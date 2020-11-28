@@ -27,6 +27,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/net/websocket"
 )
 
@@ -53,6 +54,7 @@ type CLIOptions struct {
 	wstimeoutrecv int
 	wstimeoutsend int
 	wsoutputfile  string
+	uuid          bool
 }
 
 var cliops = CLIOptions{
@@ -70,6 +72,7 @@ var cliops = CLIOptions{
 	wstimeoutrecv: 20000,
 	wstimeoutsend: 10000,
 	wsoutputfile:  "",
+	uuid:          false,
 }
 
 //
@@ -107,6 +110,7 @@ func init() {
 	flag.IntVar(&cliops.wstimeoutsend, "timeout-send", cliops.wstimeoutsend, "timeout trying to send data (milliseconds)")
 	flag.StringVar(&cliops.wsoutputfile, "output-file", cliops.wsoutputfile, "path to the file where to store sent and received messages")
 	flag.StringVar(&cliops.wsoutputfile, "O", cliops.wsoutputfile, "path to the file where to store sent and received messages")
+	flag.BoolVar(&cliops.uuid, "uuid", cliops.uuid, "generate and print an uuid")
 }
 
 //
@@ -119,6 +123,12 @@ func main() {
 
 	if cliops.version {
 		fmt.Printf("%s v%s\n", filepath.Base(os.Args[0]), wsctlVersion)
+		os.Exit(1)
+	}
+
+	if cliops.uuid {
+		uuidVal := uuid.New()
+		fmt.Println(uuidVal)
 		os.Exit(1)
 	}
 
