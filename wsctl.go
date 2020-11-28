@@ -46,6 +46,7 @@ type CLIOptions struct {
 	wsinsecure    bool
 	wsreceive     bool
 	wstemplate    string
+	wstemplaterun bool
 	wsfields      string
 	wscrlf        bool
 	version       bool
@@ -54,7 +55,7 @@ type CLIOptions struct {
 	wstimeoutrecv int
 	wstimeoutsend int
 	wsoutputfile  string
-	uuid          bool
+	wsuuid        bool
 }
 
 var cliops = CLIOptions{
@@ -64,6 +65,7 @@ var cliops = CLIOptions{
 	wsinsecure:    true,
 	wsreceive:     true,
 	wstemplate:    "",
+	wstemplaterun: false,
 	wsfields:      "",
 	wscrlf:        false,
 	version:       false,
@@ -72,7 +74,7 @@ var cliops = CLIOptions{
 	wstimeoutrecv: 20000,
 	wstimeoutsend: 10000,
 	wsoutputfile:  "",
-	uuid:          false,
+	wsuuid:        false,
 }
 
 //
@@ -110,7 +112,8 @@ func init() {
 	flag.IntVar(&cliops.wstimeoutsend, "timeout-send", cliops.wstimeoutsend, "timeout trying to send data (milliseconds)")
 	flag.StringVar(&cliops.wsoutputfile, "output-file", cliops.wsoutputfile, "path to the file where to store sent and received messages")
 	flag.StringVar(&cliops.wsoutputfile, "O", cliops.wsoutputfile, "path to the file where to store sent and received messages")
-	flag.BoolVar(&cliops.uuid, "uuid", cliops.uuid, "generate and print an uuid")
+	flag.BoolVar(&cliops.wsuuid, "uuid", cliops.wsuuid, "generate and print a uuid")
+	flag.BoolVar(&cliops.wstemplaterun, "template-run", cliops.wstemplaterun, "run template execution and print the result")
 }
 
 //
@@ -126,7 +129,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if cliops.uuid {
+	if cliops.wsuuid {
 		uuidVal := uuid.New()
 		fmt.Println(uuidVal)
 		os.Exit(1)
@@ -143,21 +146,6 @@ func main() {
 	orgp, err := url.Parse(cliops.wsorigin)
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	tlc := tls.Config{
-		InsecureSkipVerify: false,
-	}
-	if cliops.wsinsecure {
-		tlc.InsecureSkipVerify = true
-	}
-
-	if cliops.wsoutputfile != "" {
-		outputFile, err = os.Create(cliops.wsoutputfile)
-		if err != nil {
-			log.Fatal("Cannot create file", err)
-		}
-		defer outputFile.Close()
 	}
 
 	// buffer to send over ws connection
@@ -195,6 +183,26 @@ func main() {
 		wmsg = []byte(strings.Replace(buf.String(), "\n", "\r\n", -1))
 	} else {
 		wmsg = buf.Bytes()
+	}
+
+	if cliops.wstemplaterun {
+		fmt.Println(string(wmsg))
+		os.Exit(1)
+	}
+
+	tlc := tls.Config{
+		InsecureSkipVerify: false,
+	}
+	if cliops.wsinsecure {
+		tlc.InsecureSkipVerify = true
+	}
+
+	if cliops.wsoutputfile != "" {
+		outputFile, err = os.Create(cliops.wsoutputfile)
+		if err != nil {
+			log.Fatal("Cannot create file", err)
+		}
+		defer outputFile.Close()
 	}
 
 	// open ws connection
