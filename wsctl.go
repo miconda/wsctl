@@ -160,7 +160,7 @@ func main() {
 		defer outputFile.Close()
 	}
 
-	// buffer to send over ws connction
+	// buffer to send over ws connection
 	var buf bytes.Buffer
 	var tplstr = ""
 	if len(cliops.wstemplate) > 0 {
