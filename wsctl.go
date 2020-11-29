@@ -33,6 +33,22 @@ import (
 
 const wsctlVersion = "1.0"
 
+var templateDefaultText string = `OPTIONS sip:{{.callee}}@{{.domain}} SIP/2.0
+Via: SIP/2.0/WSS df7jal23ls0d.invalid;branch=z9hG4bKasudf-3696-24845-1
+From: "{{.caller}}" <sip:{{.caller}}@{{.domain}}>;tag=d71a60e3-c5f6-4b17-a8b6-d08c6a690ae4
+To: "{{.callee}}" <sip:{{.callee}}@{{.domain}}>
+Call-ID: deefd8e1-993e-4552-8a1b-4f3d9390485e
+CSeq: 2 OPTIONS
+Subject: testing
+Content-Length: 0
+`
+
+var templateDefaultJSONFields string = `{
+	"caller": "alice",
+	"callee": "bob",
+	"domain": "localhost"
+}`
+
 var templateFields = map[string]map[string]interface{}{
 	"FIELDS:EMPTY": {},
 }
@@ -103,8 +119,8 @@ func init() {
 	flag.StringVar(&cliops.wsproto, "p", cliops.wsproto, "websocket sub-protocol")
 	flag.BoolVar(&cliops.wsreceive, "receive", cliops.wsreceive, "wait to receive response from ws server (true|false)")
 	flag.BoolVar(&cliops.wsreceive, "r", cliops.wsreceive, "wait to receive response from ws server (true|false)")
-	flag.StringVar(&cliops.wstemplate, "template", cliops.wstemplate, "path to template file (mandatory parameter)")
-	flag.StringVar(&cliops.wstemplate, "t", cliops.wstemplate, "path to template file (mandatory parameter)")
+	flag.StringVar(&cliops.wstemplate, "template", cliops.wstemplate, "path to template file")
+	flag.StringVar(&cliops.wstemplate, "t", cliops.wstemplate, "path to template file")
 	flag.StringVar(&cliops.wsurl, "url", cliops.wsurl, "websocket url (ws://... or wss://...)")
 	flag.StringVar(&cliops.wsurl, "u", cliops.wsurl, "websocket url (ws://... or wss://...)")
 	flag.BoolVar(&cliops.version, "version", cliops.version, "print version")
@@ -157,6 +173,8 @@ func main() {
 			log.Fatal(err1)
 		}
 		tplstr = string(tpldata)
+	} else if len(templateDefaultText) > 0 {
+		tplstr = templateDefaultText
 	} else {
 		log.Fatal("missing data template file ('-t' or '--template' parameter must be provided)")
 	}
@@ -168,6 +186,11 @@ func main() {
 			log.Fatal(err1)
 		}
 		err = json.Unmarshal(fieldsdata, &tplfields)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if len(templateDefaultJSONFields) > 0 {
+		err = json.Unmarshal([]byte(templateDefaultJSONFields), &tplfields)
 		if err != nil {
 			log.Fatal(err)
 		}
