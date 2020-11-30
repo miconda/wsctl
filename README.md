@@ -1,11 +1,11 @@
-# wsctl
+# wsctl #
 WebSocket Command Line Tool
 
 License: `GPLv2`
 
 Copyright: Daniel-Constantin Mierla (Asipto, https://www.asipto.com)
 
-## Overview
+## Overview ##
 
 **wsctl** is a websocket client to be used from command line. It is written in Go (Golang).
 
@@ -17,7 +17,7 @@ It was developed and tested for sending SIP requests over websocket to Kamailio 
 
 For SIP over websocket, it can do www-digest authentication if the server challenges with a 401/407 response.
 
-## Install
+## Install ##
 
 First install Go (http://golang.org). Once the Go environment is configured, the websocket package must be fetched locally:
 
@@ -31,7 +31,7 @@ Fetch this repository into your Go environment:
 go get -v -u github.com/miconda/wsctl
 ```
 
-### Run
+### Run ##
 
 Navigate to the project folder and run:
 
@@ -51,11 +51,13 @@ And then execute:
 $GOPATH/bin/wsctl [options]
 ```
 
-## Command Line Options
+## Command Line Options ##
 
 If run with option `-h` or `--help`, it will print the help message.
 
-The parameter `--template` (short form `-t`) is mandatory - it is used to provide the path to template file. More details about template files are provided in the next section.
+The parameter `--template` (short form `-t`) is used to provide the path to template file.
+If it is not provided, `wsctl` uses an internal template and fields data, which
+build an SIP OPTIONS requests. More details about template files are provided in the next section.
 
 The parameter '--url' can be used to set the URL to websocket server, if not provided, its value is 'wss://127.0.0.1:8443'.
 
@@ -84,27 +86,67 @@ The HTTP URL for Origin header can be set with option `--origin=...`. Its defaul
 
 The websocket subprotocol can be set with option `--protocol=...`. Default is `sip`.
 
-## Data Templates
+## Data Templates ##
 
 The data to be sent via the websocket connection is built from a template file and a fields file.
 
-The template file can contain any any of the dirrectives supported by Go package `text/template` - for more see:
+The template file can contain any any of the directives supported by Go package `text/template` - for more see:
 
   * https://golang.org/pkg/text/template/
+
+Example:
+
+```
+OPTIONS sip:{{.callee}}@{{.domain}} SIP/2.0
+Via: SIP/2.0/WSS df7jal23ls0d.invalid;branch=z9hG4bKasudf-3696-24845-1
+From: "{{.caller}}" <sip:{{.caller}}@{{.domain}}>;tag={{.fromtag}}
+To: "{{.callee}}" <sip:{{.callee}}@{{.domain}}>
+Call-ID: {{.callid}}
+CSeq: {{.cseqnum}} OPTIONS
+Subject: testing
+Content-Length: 0
+
+```
+
+The internal template can be found at the top of `wsctl.go` file.
+
+## Data Fields ##
 
 The fields file has to contain a JSON document with the fields to be replaced in the template file.
 
 Sample template and fields files can be found inside subfolder `examples/`.
 
-## Internals
+When the `--fields-eval` cli option is provided, `wsctl` evaluates the values of the
+fields in the root structure of the JSON document. That means special tokens (expressions)
+are replaced if the value of the field is a string matching one of the next:
+
+  * `"$uuid"` - replace with an UUID value
+  * `"$randseq"` - replace with a random number from `1` to `1 000 000`.
+
+Example:
+
+```json
+{
+	"caller": "alice",
+	"callee": "bob",
+	"domain": "localhost",
+	"fromtag": "$uuid",
+	"callid": "$uuid",
+	"cseqnum": "$randseq"
+}
+```
+
+The internal fields data can be found at the top of `wsctl.go` file.
+
+## Internals ##
 
 Sending data over websocket connection has a timeout of 10 seconds. Receiving data from websocket connection has a timeout of 20 seconds. These values can be changed via command line parameters.
 
-## Contributions
+## Contributions ##
 
 Contributions are welcome! Fork and do pull requests on https://github.com/miconda/wsctl .
 
-## To-Do
+## To-Do ##
 
 Just some ideas for now, not all to be implemented:
 
