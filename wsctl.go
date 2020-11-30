@@ -35,9 +35,9 @@ const wsctlVersion = "1.0"
 
 var templateDefaultText string = `OPTIONS sip:{{.callee}}@{{.domain}} SIP/2.0
 Via: SIP/2.0/WSS df7jal23ls0d.invalid;branch=z9hG4bKasudf-3696-24845-1
-From: "{{.caller}}" <sip:{{.caller}}@{{.domain}}>;tag=d71a60e3-c5f6-4b17-a8b6-d08c6a690ae4
+From: "{{.caller}}" <sip:{{.caller}}@{{.domain}}>;tag={{.fromtag}}
 To: "{{.callee}}" <sip:{{.callee}}@{{.domain}}>
-Call-ID: deefd8e1-993e-4552-8a1b-4f3d9390485e
+Call-ID: {{.callid}}
 CSeq: 2 OPTIONS
 Subject: testing
 Content-Length: 0
@@ -46,7 +46,9 @@ Content-Length: 0
 var templateDefaultJSONFields string = `{
 	"caller": "alice",
 	"callee": "bob",
-	"domain": "localhost"
+	"domain": "localhost",
+	"fromtag": "d71a60e3-c5f6-4b17-a8b6-d08c6a690ae4",
+	"callid": "deefd8e1-993e-4552-8a1b-4f3d9390485e"
 }`
 
 var templateFields = map[string]map[string]interface{}{
@@ -179,7 +181,7 @@ func main() {
 		log.Fatal("missing data template file ('-t' or '--template' parameter must be provided)")
 	}
 
-	var tplfields interface{}
+	tplfields := make(map[string]interface{})
 	if len(cliops.wsfields) > 0 {
 		fieldsdata, err1 := ioutil.ReadFile(cliops.wsfields)
 		if err1 != nil {
