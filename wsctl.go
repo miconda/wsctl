@@ -9,7 +9,7 @@ package main
 import (
 	"bytes"
 	"crypto/md5"
-	"crypto/rand"
+	cryptorand "crypto/rand"
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
@@ -18,6 +18,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	mathrand "math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -38,7 +39,7 @@ Via: SIP/2.0/WSS df7jal23ls0d.invalid;branch=z9hG4bKasudf-3696-24845-1
 From: "{{.caller}}" <sip:{{.caller}}@{{.domain}}>;tag={{.fromtag}}
 To: "{{.callee}}" <sip:{{.callee}}@{{.domain}}>
 Call-ID: {{.callid}}
-CSeq: 2 OPTIONS
+CSeq: {{.cseqnum}} OPTIONS
 Subject: testing
 Content-Length: 0
 `
@@ -47,8 +48,9 @@ var templateDefaultJSONFields string = `{
 	"caller": "alice",
 	"callee": "bob",
 	"domain": "localhost",
-	"fromtag": "d71a60e3-c5f6-4b17-a8b6-d08c6a690ae4",
-	"callid": "deefd8e1-993e-4552-8a1b-4f3d9390485e"
+	"fromtag": "$uuid",
+	"callid": "$uuid",
+	"cseqnum": "$randseq"
 }`
 
 var templateFields = map[string]map[string]interface{}{
@@ -66,6 +68,7 @@ type CLIOptions struct {
 	wstemplate    string
 	wstemplaterun bool
 	wsfields      string
+	wsfieldseval  bool
 	wscrlf        bool
 	version       bool
 	wsauser       string
@@ -85,6 +88,7 @@ var cliops = CLIOptions{
 	wstemplate:    "",
 	wstemplaterun: false,
 	wsfields:      "",
+	wsfieldseval:  false,
 	wscrlf:        false,
 	version:       false,
 	wsauser:       "",
@@ -113,6 +117,7 @@ func init() {
 	flag.BoolVar(&cliops.wscrlf, "crlf", cliops.wscrlf, "replace '\\n' with '\\r\\n' inside the data to be sent (true|false)")
 	flag.StringVar(&cliops.wsfields, "fields", cliops.wsfields, "path to the json fields file")
 	flag.StringVar(&cliops.wsfields, "f", cliops.wsfields, "path to the json fields file")
+	flag.BoolVar(&cliops.wsfieldseval, "fields-eval", cliops.wsfieldseval, "evaluate expression in fields file")
 	flag.BoolVar(&cliops.wsinsecure, "insecure", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
 	flag.BoolVar(&cliops.wsinsecure, "i", cliops.wsinsecure, "skip tls certificate validation for wss (true|false)")
 	flag.StringVar(&cliops.wsorigin, "origin", cliops.wsorigin, "origin http url")
@@ -198,6 +203,20 @@ func main() {
 		}
 	} else {
 		tplfields = templateFields["FIELDS:EMPTY"]
+	}
+	if cliops.wsfieldseval {
+		for k := range tplfields {
+			switch tplfields[k].(type) {
+			case string:
+				if tplfields[k] == "$uuid" {
+					tplfields[k] = uuid.New().String()
+				} else if tplfields[k] == "$randseq" {
+					mathrand.Seed(time.Now().Unix())
+					tplfields[k] = strconv.Itoa(1 + mathrand.Intn(999999))
+				}
+				break
+			}
+		}
 	}
 
 	var tpl = template.Must(template.New("wsout").Parse(tplstr))
@@ -340,7 +359,7 @@ func BuildAuthResponseHeader(username string, password string, hparams map[strin
 func RandomKey() string {
 	key := make([]byte, 12)
 	for b := 0; b < len(key); {
-		n, err := rand.Read(key[b:])
+		n, err := cryptorand.Read(key[b:])
 		if err != nil {
 			panic("failed to get random bytes")
 		}
