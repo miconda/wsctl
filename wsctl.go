@@ -41,6 +41,7 @@ To: "{{.callee}}" <sip:{{.callee}}@{{.domain}}>
 Call-ID: {{.callid}}
 CSeq: {{.cseqnum}} OPTIONS
 Subject: testing
+Date: {{.date}}
 Content-Length: 0
 
 `
@@ -51,7 +52,8 @@ var templateDefaultJSONFields string = `{
 	"domain": "localhost",
 	"fromtag": "$uuid",
 	"callid": "$uuid",
-	"cseqnum": "$randseq"
+	"cseqnum": "$randseq",
+	"date": "$datefull"
 }`
 
 var templateFields = map[string]map[string]interface{}{
@@ -214,6 +216,8 @@ func main() {
 				} else if tplfields[k] == "$randseq" {
 					mathrand.Seed(time.Now().Unix())
 					tplfields[k] = strconv.Itoa(1 + mathrand.Intn(999999))
+				} else if tplfields[k] == "$datefull" {
+					tplfields[k] = time.Now().String()
 				}
 				break
 			}
