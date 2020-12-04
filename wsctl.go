@@ -218,6 +218,8 @@ func main() {
 					tplfields[k] = strconv.Itoa(1 + mathrand.Intn(999999))
 				} else if tplfields[k] == "$datefull" {
 					tplfields[k] = time.Now().String()
+				} else if tplfields[k] == "$timestamp" {
+					tplfields[k] = strconv.FormatInt(time.Now().Unix(), 10)
 				}
 				break
 			}
