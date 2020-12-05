@@ -53,7 +53,7 @@ var templateDefaultJSONFields string = `{
 	"fromtag": "$uuid",
 	"callid": "$uuid",
 	"cseqnum": "$randseq",
-	"date": "$datefull"
+	"date": "$daterfc1123"
 }`
 
 var templateFields = map[string]map[string]interface{}{
@@ -218,6 +218,12 @@ func main() {
 					tplfields[k] = strconv.Itoa(1 + mathrand.Intn(999999))
 				} else if tplfields[k] == "$datefull" {
 					tplfields[k] = time.Now().String()
+				} else if tplfields[k] == "$daterfc1123" {
+					tplfields[k] = time.Now().Format(time.RFC1123)
+				} else if tplfields[k] == "$dateunix" {
+					tplfields[k] = time.Now().Format(time.UnixDate)
+				} else if tplfields[k] == "$dateansic" {
+					tplfields[k] = time.Now().Format(time.ANSIC)
 				} else if tplfields[k] == "$timestamp" {
 					tplfields[k] = strconv.FormatInt(time.Now().Unix(), 10)
 				}
