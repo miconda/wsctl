@@ -120,8 +120,13 @@ When the `--fields-eval` cli option is provided, `wsctl` evaluates the values of
 fields in the root structure of the JSON document. That means special tokens (expressions)
 are replaced if the value of the field is a string matching one of the next:
 
-  * `"$uuid"` - replace with an UUID value
+  * `"$uuid"` - replace with a UUID value
   * `"$randseq"` - replace with a random number from `1` to `1 000 000`.
+  * `"$datefull"` - replace with output of `time.Now().String()`
+  * `"$daterfc1123"` - replace with output of `time.Now().Format(time.RFC1123)`
+  * `"$dateansic"` - replace with output of `time.Now().Format(time.ANSIC)`
+  * `"$dateunix"` - replace with output of `time.Now().Format(time.UnixDate)`
+  * `"$timestamp"` - replace with output of `time.Now().Unix()`
 
 Example:
 
