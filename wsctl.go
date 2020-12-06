@@ -60,6 +60,26 @@ var templateFields = map[string]map[string]interface{}{
 	"FIELDS:EMPTY": {},
 }
 
+type paramFieldsType map[string]string
+
+func (m paramFieldsType) String() string {
+	b := new(bytes.Buffer)
+	for key, value := range m {
+		fmt.Fprintf(b, "%s:%s\n", key, value)
+	}
+	return b.String()
+}
+
+func (m paramFieldsType) Set(value string) error {
+	z := strings.SplitN(value, ":", 2)
+	if len(z) > 1 {
+		m[z[0]] = z[1]
+	}
+	return nil
+}
+
+var paramFields = make(paramFieldsType)
+
 //
 // CLIOptions - structure for command line options
 type CLIOptions struct {
@@ -140,6 +160,7 @@ func init() {
 	flag.StringVar(&cliops.wsoutputfile, "O", cliops.wsoutputfile, "path to the file where to store sent and received messages")
 	flag.BoolVar(&cliops.wsuuid, "uuid", cliops.wsuuid, "generate and print a uuid")
 	flag.BoolVar(&cliops.wstemplaterun, "template-run", cliops.wstemplaterun, "run template execution and print the result")
+	flag.Var(&paramFields, "field-val", "field value")
 }
 
 //
@@ -229,6 +250,11 @@ func main() {
 				}
 				break
 			}
+		}
+	}
+	if len(paramFields) > 0 {
+		for k := range paramFields {
+			tplfields[k] = paramFields[k]
 		}
 	}
 
