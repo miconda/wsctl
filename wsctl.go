@@ -160,7 +160,7 @@ func init() {
 	flag.StringVar(&cliops.wsoutputfile, "O", cliops.wsoutputfile, "path to the file where to store sent and received messages")
 	flag.BoolVar(&cliops.wsuuid, "uuid", cliops.wsuuid, "generate and print a uuid")
 	flag.BoolVar(&cliops.wstemplaterun, "template-run", cliops.wstemplaterun, "run template execution and print the result")
-	flag.Var(&paramFields, "field-val", "field value")
+	flag.Var(&paramFields, "field-val", "field value in format 'name:value' (can be provided many times)")
 }
 
 //
