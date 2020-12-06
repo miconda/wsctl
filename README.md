@@ -112,7 +112,9 @@ The internal template can be found at the top of `wsctl.go` file.
 
 ## Data Fields ##
 
-The fields file has to contain a JSON document with the fields to be replaced in the template file.
+The fields file has to contain a JSON document with the fields to be replaced
+in the template file. The path to the JSON file is provided via `-f` or `--fields`
+parameters.
 
 Sample template and fields files can be found inside subfolder `examples/`.
 
@@ -142,6 +144,16 @@ Example:
 ```
 
 The internal fields data can be found at the top of `wsctl.go` file.
+
+The values for fields can be also provided using `--field-val` cli parameter, in
+format `name:value`, for example:
+
+```
+wsctl --field-val="domain:openrcs.com" ...
+```
+
+The value provided via `--field-val` overwrites the value provided in the
+JSON fields file.
 
 ## Internals ##
 
