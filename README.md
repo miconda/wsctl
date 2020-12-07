@@ -129,6 +129,8 @@ are replaced if the value of the field is a string matching one of the next:
   * `"$dateansic"` - replace with output of `time.Now().Format(time.ANSIC)`
   * `"$dateunix"` - replace with output of `time.Now().Format(time.UnixDate)`
   * `"$timestamp"` - replace with output of `time.Now().Unix()`
+  * `"$cr"` - replace with `\r`
+  * `"$lf"` - replace with `\n`
 
 Example:
 
