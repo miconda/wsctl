@@ -83,45 +83,47 @@ var paramFields = make(paramFieldsType)
 //
 // CLIOptions - structure for command line options
 type CLIOptions struct {
-	wsurl          string
-	wsorigin       string
-	wsproto        string
-	wsinsecure     bool
-	wsreceive      bool
-	wstemplate     string
-	wstemplaterun  bool
-	wsfields       string
-	wsfieldseval   bool
-	wscrlf         bool
-	version        bool
-	wsauser        string
-	wsapasswd      string
-	wstimeoutrecv  int
-	wstimeoutsend  int
-	wsoutputfile   string
-	wsuuid         bool
-	wsflagdefaults bool
+	wsurl              string
+	wsorigin           string
+	wsproto            string
+	wsinsecure         bool
+	wsreceive          bool
+	wstemplate         string
+	wstemplaterun      bool
+	wsfields           string
+	wsfieldseval       bool
+	wscrlf             bool
+	version            bool
+	wsauser            string
+	wsapasswd          string
+	wstimeoutrecv      int
+	wstimeoutsend      int
+	wsoutputfile       string
+	wsuuid             bool
+	wsflagdefaults     bool
+	wstemplatedefaults bool
 }
 
 var cliops = CLIOptions{
-	wsurl:          "wss://127.0.0.1:8443",
-	wsorigin:       "http://127.0.0.1",
-	wsproto:        "sip",
-	wsinsecure:     true,
-	wsreceive:      true,
-	wstemplate:     "",
-	wstemplaterun:  false,
-	wsfields:       "",
-	wsfieldseval:   false,
-	wscrlf:         false,
-	version:        false,
-	wsauser:        "",
-	wsapasswd:      "",
-	wstimeoutrecv:  20000,
-	wstimeoutsend:  10000,
-	wsoutputfile:   "",
-	wsuuid:         false,
-	wsflagdefaults: false,
+	wsurl:              "wss://127.0.0.1:8443",
+	wsorigin:           "http://127.0.0.1",
+	wsproto:            "sip",
+	wsinsecure:         true,
+	wsreceive:          true,
+	wstemplate:         "",
+	wstemplaterun:      false,
+	wsfields:           "",
+	wsfieldseval:       false,
+	wscrlf:             false,
+	version:            false,
+	wsauser:            "",
+	wsapasswd:          "",
+	wstimeoutrecv:      20000,
+	wstimeoutsend:      10000,
+	wsoutputfile:       "",
+	wsuuid:             false,
+	wsflagdefaults:     false,
+	wstemplatedefaults: false,
 }
 
 //
@@ -163,7 +165,8 @@ func init() {
 	flag.BoolVar(&cliops.wsuuid, "uuid", cliops.wsuuid, "generate and print a uuid")
 	flag.BoolVar(&cliops.wstemplaterun, "template-run", cliops.wstemplaterun, "run template execution and print the result")
 	flag.Var(&paramFields, "field-val", "field value in format 'name:value' (can be provided many times)")
-	flag.BoolVar(&cliops.wsflagdefaults, "flag-defaults", cliops.wsuuid, "print flag (cli param) default values")
+	flag.BoolVar(&cliops.wsflagdefaults, "flag-defaults", cliops.wsflagdefaults, "print flag (cli param) default values")
+	flag.BoolVar(&cliops.wstemplatedefaults, "template-defaults", cliops.wstemplatedefaults, "print default (internal) template data")
 }
 
 //
@@ -179,6 +182,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	if cliops.wstemplatedefaults {
+		fmt.Println("Default template:\n")
+		fmt.Println(templateDefaultText)
+		fmt.Println("Default fields:\n")
+		fmt.Println(templateDefaultJSONFields)
+		os.Exit(1)
+	}
 	if cliops.wsflagdefaults {
 		flag.PrintDefaults()
 		os.Exit(1)
