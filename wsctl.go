@@ -32,7 +32,7 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-const wsctlVersion = "1.0"
+const wsctlVersion = "1.1.0"
 
 var templateDefaultText string = `OPTIONS sip:{{.callee}}@{{.domain}} SIP/2.0
 Via: SIP/2.0/WSS df7jal23ls0d.invalid;branch=z9hG4bKasudf-3696-24845-1
