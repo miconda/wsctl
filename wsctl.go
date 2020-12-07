@@ -83,43 +83,45 @@ var paramFields = make(paramFieldsType)
 //
 // CLIOptions - structure for command line options
 type CLIOptions struct {
-	wsurl         string
-	wsorigin      string
-	wsproto       string
-	wsinsecure    bool
-	wsreceive     bool
-	wstemplate    string
-	wstemplaterun bool
-	wsfields      string
-	wsfieldseval  bool
-	wscrlf        bool
-	version       bool
-	wsauser       string
-	wsapasswd     string
-	wstimeoutrecv int
-	wstimeoutsend int
-	wsoutputfile  string
-	wsuuid        bool
+	wsurl          string
+	wsorigin       string
+	wsproto        string
+	wsinsecure     bool
+	wsreceive      bool
+	wstemplate     string
+	wstemplaterun  bool
+	wsfields       string
+	wsfieldseval   bool
+	wscrlf         bool
+	version        bool
+	wsauser        string
+	wsapasswd      string
+	wstimeoutrecv  int
+	wstimeoutsend  int
+	wsoutputfile   string
+	wsuuid         bool
+	wsflagdefaults bool
 }
 
 var cliops = CLIOptions{
-	wsurl:         "wss://127.0.0.1:8443",
-	wsorigin:      "http://127.0.0.1",
-	wsproto:       "sip",
-	wsinsecure:    true,
-	wsreceive:     true,
-	wstemplate:    "",
-	wstemplaterun: false,
-	wsfields:      "",
-	wsfieldseval:  false,
-	wscrlf:        false,
-	version:       false,
-	wsauser:       "",
-	wsapasswd:     "",
-	wstimeoutrecv: 20000,
-	wstimeoutsend: 10000,
-	wsoutputfile:  "",
-	wsuuid:        false,
+	wsurl:          "wss://127.0.0.1:8443",
+	wsorigin:       "http://127.0.0.1",
+	wsproto:        "sip",
+	wsinsecure:     true,
+	wsreceive:      true,
+	wstemplate:     "",
+	wstemplaterun:  false,
+	wsfields:       "",
+	wsfieldseval:   false,
+	wscrlf:         false,
+	version:        false,
+	wsauser:        "",
+	wsapasswd:      "",
+	wstimeoutrecv:  20000,
+	wstimeoutsend:  10000,
+	wsoutputfile:   "",
+	wsuuid:         false,
+	wsflagdefaults: false,
 }
 
 //
@@ -131,7 +133,7 @@ func init() {
 	// command line arguments
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s (v%s):\n", filepath.Base(os.Args[0]), wsctlVersion)
-		fmt.Fprintf(os.Stderr, "    (each option has short and long version)\n")
+		fmt.Fprintf(os.Stderr, "    (some options have short and long version)\n")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -161,6 +163,7 @@ func init() {
 	flag.BoolVar(&cliops.wsuuid, "uuid", cliops.wsuuid, "generate and print a uuid")
 	flag.BoolVar(&cliops.wstemplaterun, "template-run", cliops.wstemplaterun, "run template execution and print the result")
 	flag.Var(&paramFields, "field-val", "field value in format 'name:value' (can be provided many times)")
+	flag.BoolVar(&cliops.wsflagdefaults, "flag-defaults", cliops.wsuuid, "print flag (cli param) default values")
 }
 
 //
@@ -176,6 +179,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	if cliops.wsflagdefaults {
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
 	if cliops.wsuuid {
 		uuidVal := uuid.New()
 		fmt.Println(uuidVal)
