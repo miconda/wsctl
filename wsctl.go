@@ -102,6 +102,7 @@ type CLIOptions struct {
 	wsuuid             bool
 	wsflagdefaults     bool
 	wstemplatedefaults bool
+	wsdomainurl        bool
 }
 
 var cliops = CLIOptions{
@@ -124,6 +125,7 @@ var cliops = CLIOptions{
 	wsuuid:             false,
 	wsflagdefaults:     false,
 	wstemplatedefaults: false,
+	wsdomainurl:        false,
 }
 
 //
@@ -167,6 +169,7 @@ func init() {
 	flag.Var(&paramFields, "field-val", "field value in format 'name:value' (can be provided many times)")
 	flag.BoolVar(&cliops.wsflagdefaults, "flag-defaults", cliops.wsflagdefaults, "print flag (cli param) default values")
 	flag.BoolVar(&cliops.wstemplatedefaults, "template-defaults", cliops.wstemplatedefaults, "print default (internal) template data")
+	flag.BoolVar(&cliops.wsdomainurl, "domain-url", cliops.wsdomainurl, "set domain field value extracting from URL parameter")
 }
 
 //
@@ -277,6 +280,9 @@ func main() {
 		for k := range paramFields {
 			tplfields[k] = paramFields[k]
 		}
+	}
+	if cliops.wsdomainurl {
+		tplfields["domain"] = urlp.Hostname()
 	}
 
 	var tpl = template.Must(template.New("wsout").Parse(tplstr))
