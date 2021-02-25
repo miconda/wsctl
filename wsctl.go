@@ -248,6 +248,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		cliops.wsfieldseval = true
 	} else {
 		tplfields = templateFields["FIELDS:EMPTY"]
 	}
