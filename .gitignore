@@ -2,6 +2,7 @@
 *.o
 *.a
 *.so
+/wsctl
 
 # Folders
 _obj
