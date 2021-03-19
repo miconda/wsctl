@@ -104,6 +104,12 @@ type CLIOptions struct {
 	wstemplatedefaults bool
 	wsdomainurl        bool
 	wsdomainorigin     bool
+	wshttpdomain       string
+	wshttpsrv          string
+	wshttpssrv         string
+	wshttpspubkey      string
+	wshttpsprvkey      string
+	wshttpsusele       bool
 }
 
 var cliops = CLIOptions{
@@ -128,6 +134,12 @@ var cliops = CLIOptions{
 	wstemplatedefaults: false,
 	wsdomainurl:        false,
 	wsdomainorigin:     false,
+	wshttpdomain:       "",
+	wshttpsrv:          "",
+	wshttpssrv:         "",
+	wshttpspubkey:      "",
+	wshttpsprvkey:      "",
+	wshttpsusele:       false,
 }
 
 //
@@ -173,6 +185,82 @@ func init() {
 	flag.BoolVar(&cliops.wstemplatedefaults, "template-defaults", cliops.wstemplatedefaults, "print default (internal) template data")
 	flag.BoolVar(&cliops.wsdomainurl, "domain-url", cliops.wsdomainurl, "set domain field value extracting from URL parameter")
 	flag.BoolVar(&cliops.wsdomainorigin, "domain-origin", cliops.wsdomainorigin, "set domain field value extracting from origin parameter")
+	flag.StringVar(&cliops.wshttpdomain, "http-domain", cliops.wshttpdomain, "http service domain")
+	flag.StringVar(&cliops.wshttpsrv, "http-srv", cliops.wshttpsrv, "http server bind address")
+	flag.StringVar(&cliops.wshttpssrv, "https-srv", cliops.wshttpssrv, "https server bind address")
+	flag.StringVar(&cliops.wshttpspubkey, "https-pubkey", cliops.wshttpspubkey, "https server public key")
+	flag.StringVar(&cliops.wshttpsprvkey, "https-prvkey", cliops.wshttpsprvkey, "https server private key")
+}
+
+func WSServerEchoOnly(ws *websocket.Conn) {
+	fmt.Printf("echo only service requested\n")
+	io.Copy(ws, ws)
+	fmt.Println("echo only service finished\n")
+}
+
+func WSServerEcho(ws *websocket.Conn) {
+	fmt.Printf("echo service requested: %#v\n", ws)
+	for {
+		var buf string
+		err := websocket.Message.Receive(ws, &buf)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		fmt.Printf("message received: %q\n", buf)
+		err = websocket.Message.Send(ws, buf)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		fmt.Printf("message sent: %q\n", buf)
+	}
+	fmt.Printf("echo service finished: %#v\n", ws)
+}
+
+func WSServerLog(ws *websocket.Conn) {
+	fmt.Printf("log service requested: %#v\n", ws)
+	for {
+		var buf string
+		err := websocket.Message.Receive(ws, &buf)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		fmt.Printf("message received: %q\n", buf)
+	}
+	fmt.Printf("log service finished: %#v\n", ws)
+}
+
+//
+// Start http and https services
+func startHTTPServices() chan error {
+
+	errchan := make(chan error)
+
+	// starting HTTP server
+	if len(cliops.wshttpsrv) > 0 {
+		go func() {
+			log.Printf("staring HTTP service on: %s ...", cliops.wshttpsrv)
+
+			if err := http.ListenAndServe(cliops.wshttpsrv, nil); err != nil {
+				errchan <- err
+			}
+
+		}()
+	}
+
+	// starting HTTPS server
+	if len(cliops.wshttpssrv) > 0 && len(cliops.wshttpspubkey) > 0 && len(cliops.wshttpsprvkey) > 0 {
+		go func() {
+			log.Printf("Staring HTTPS service on: %s ...", cliops.wshttpssrv)
+			if err := http.ListenAndServeTLS(cliops.wshttpssrv, cliops.wshttpspubkey, cliops.wshttpsprvkey, nil); err != nil {
+				errchan <- err
+			}
+		}()
+	}
+
+	return errchan
 }
 
 //
@@ -188,6 +276,25 @@ func main() {
 		os.Exit(1)
 	}
 
+	if len(cliops.wshttpsrv) > 0 || len(cliops.wshttpssrv) > 0 {
+		if cliops.wshttpsusele && len(cliops.wshttpdomain) == 0 {
+			log.Printf("use-letsencrypt requires http domain parameter\n")
+			os.Exit(1)
+		}
+		if cliops.wshttpsusele && len(cliops.wshttpssrv) > 0 && len(cliops.wshttpdomain) > 0 {
+			cliops.wshttpspubkey = "/etc/letsencrypt/live/" + cliops.wshttpdomain + "/fullchain.pem"
+			cliops.wshttpsprvkey = "/etc/letsencrypt/live/" + cliops.wshttpdomain + "/privkey.pem"
+		}
+		http.Handle("/echo-only", websocket.Handler(WSServerEchoOnly))
+		http.Handle("/echo", websocket.Handler(WSServerEcho))
+		http.Handle("/log", websocket.Handler(WSServerLog))
+		errchan := startHTTPServices()
+		select {
+		case err := <-errchan:
+			log.Printf("unable to start http services due to (error: %v)", err)
+		}
+		os.Exit(1)
+	}
 	if cliops.wstemplatedefaults {
 		fmt.Println("Default template:\n")
 		fmt.Println(templateDefaultText)
