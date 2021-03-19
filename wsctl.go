@@ -192,12 +192,14 @@ func init() {
 	flag.StringVar(&cliops.wshttpsprvkey, "https-prvkey", cliops.wshttpsprvkey, "https server private key")
 }
 
+// Echo-only service with direct copy
 func WSServerEchoOnly(ws *websocket.Conn) {
 	fmt.Printf("echo only service requested\n")
 	io.Copy(ws, ws)
 	fmt.Println("echo only service finished\n")
 }
 
+// Echo service with logging of content
 func WSServerEcho(ws *websocket.Conn) {
 	fmt.Printf("echo service requested: %#v\n", ws)
 	for {
@@ -218,6 +220,7 @@ func WSServerEcho(ws *websocket.Conn) {
 	fmt.Printf("echo service finished: %#v\n", ws)
 }
 
+// Log service to print received messages
 func WSServerLog(ws *websocket.Conn) {
 	fmt.Printf("log service requested: %#v\n", ws)
 	for {
