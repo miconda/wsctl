@@ -194,14 +194,14 @@ func init() {
 
 // Echo-only service with direct copy
 func WSServerEchoOnly(ws *websocket.Conn) {
-	fmt.Printf("echo only service requested\n")
+	fmt.Printf("echo-only - service requested\n")
 	io.Copy(ws, ws)
-	fmt.Println("echo only service finished\n")
+	fmt.Println("echo-only - service finished\n")
 }
 
 // Echo service with logging of content
 func WSServerEcho(ws *websocket.Conn) {
-	fmt.Printf("echo service requested: %#v\n", ws)
+	fmt.Printf("echo - service requested: %#v\n", ws)
 	for {
 		var buf string
 		err := websocket.Message.Receive(ws, &buf)
@@ -209,20 +209,20 @@ func WSServerEcho(ws *websocket.Conn) {
 			fmt.Println(err)
 			break
 		}
-		fmt.Printf("message received: %q\n", buf)
+		fmt.Printf("echo - message received: %q\n", buf)
 		err = websocket.Message.Send(ws, buf)
 		if err != nil {
 			fmt.Println(err)
 			break
 		}
-		fmt.Printf("message sent: %q\n", buf)
+		fmt.Printf("echo - message sent: %q\n", buf)
 	}
-	fmt.Printf("echo service finished: %#v\n", ws)
+	fmt.Printf("echo - service finished: %#v\n", ws)
 }
 
-// Log service to print received messages
-func WSServerLog(ws *websocket.Conn) {
-	fmt.Printf("log service requested: %#v\n", ws)
+// Echo service with logging of content
+func WSServerEchoReply(ws *websocket.Conn) {
+	fmt.Printf("echo-reply - service requested: %#v\n", ws)
 	for {
 		var buf string
 		err := websocket.Message.Receive(ws, &buf)
@@ -230,9 +230,30 @@ func WSServerLog(ws *websocket.Conn) {
 			fmt.Println(err)
 			break
 		}
-		fmt.Printf("message received: %q\n", buf)
+		fmt.Printf("echo-reply - message received: %q\n", buf)
+		err = websocket.Message.Send(ws, "Replying-To: "+buf)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		fmt.Printf("echo-reply - message sent: %q\n", buf)
 	}
-	fmt.Printf("log service finished: %#v\n", ws)
+	fmt.Printf("echo-reply - service finished: %#v\n", ws)
+}
+
+// Log service to print received messages
+func WSServerLog(ws *websocket.Conn) {
+	fmt.Printf("log - service requested: %#v\n", ws)
+	for {
+		var buf string
+		err := websocket.Message.Receive(ws, &buf)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		fmt.Printf("log - message received: %q\n", buf)
+	}
+	fmt.Printf("log - service finished: %#v\n", ws)
 }
 
 //
@@ -289,6 +310,7 @@ func main() {
 			cliops.wshttpsprvkey = "/etc/letsencrypt/live/" + cliops.wshttpdomain + "/privkey.pem"
 		}
 		http.Handle("/echo-only", websocket.Handler(WSServerEchoOnly))
+		http.Handle("/echo-reply", websocket.Handler(WSServerEchoReply))
 		http.Handle("/echo", websocket.Handler(WSServerEcho))
 		http.Handle("/log", websocket.Handler(WSServerLog))
 		errchan := startHTTPServices()
