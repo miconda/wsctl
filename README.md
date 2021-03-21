@@ -7,7 +7,7 @@ Copyright: Daniel-Constantin Mierla (Asipto, https://www.asipto.com)
 
 ## Overview ##
 
-**wsctl** is a websocket client to be used from command line. It is written in Go (Golang).
+**wsctl** is a websocket client and basic server to be used from command line. It is written in Go (Golang).
 
 While the common use case for websocket connections is between web browser and web server, there are situations where is more convenient to use a command line (e.g., testing, monitoring).
 
@@ -16,6 +16,13 @@ While the common use case for websocket connections is between web browser and w
 It was developed and tested for sending SIP requests over websocket to Kamailio SIP Server (http://www.kamailio.org), but the data can be any format.
 
 For SIP over websocket, it can do www-digest authentication if the server challenges with a 401/407 response.
+
+As a webserver socket, **wsctl** offers a few basic services useful for testing, matching on URL path:
+
+  * `/echo` - copy received message back to the websocket connection and write a log with the message
+  * `/echo-only` - only copy what is received back to the websocket connection
+  * `/echo-reply` - prefix with `Replying-To: `  what is received and send back to the websocket connection
+  * `/log` - write a log with the message received on websocket connection
 
 ## Install ##
 
@@ -160,6 +167,12 @@ JSON fields file.
 ## Internals ##
 
 Sending data over websocket connection has a timeout of 10 seconds. Receiving data from websocket connection has a timeout of 20 seconds. These values can be changed via command line parameters.
+
+## WebSocket Server Mode ##
+
+To be started as a WebSocket server, `wsctl` must be given `-http-srv` or `-https-srv` command
+line parameter. Their value has to be `:PORT` to listen on all local IP address,
+or `LOCALIP:PORT` to listen only on a specific local IP.
 
 ## Contributions ##
 
