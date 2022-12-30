@@ -145,6 +145,52 @@ var cliops = CLIOptions{
 //
 var outputFile *os.File
 
+func printCLIOptions() {
+	type CLIOptionDef struct {
+		Ops      []string
+		Usage    string
+		DefValue string
+		VType    string
+	}
+	var items []CLIOptionDef
+	flag.VisitAll(func(f *flag.Flag) {
+		var found bool = false
+		for idx, it := range items {
+			if it.Usage == f.Usage {
+				found = true
+				it.Ops = append(it.Ops, f.Name)
+				items[idx] = it
+			}
+		}
+		if !found {
+			items = append(items, CLIOptionDef{
+				Ops:      []string{f.Name},
+				Usage:    f.Usage,
+				DefValue: f.DefValue,
+				VType:    fmt.Sprintf("%T", f.Value),
+			})
+		}
+	})
+	for _, val := range items {
+		vtype := val.VType[6 : len(val.VType)-5]
+		if vtype[len(vtype)-2:] == "64" {
+			vtype = vtype[:len(vtype)-2]
+		}
+		for _, opt := range val.Ops {
+			if vtype == "bool" {
+				fmt.Printf("  -%s\n", opt)
+			} else {
+				fmt.Printf("  -%s %s\n", opt, vtype)
+			}
+		}
+		if vtype != "bool" && len(val.DefValue) > 0 {
+			fmt.Printf("      %s [default: %s]\n", val.Usage, val.DefValue)
+		} else {
+			fmt.Printf("      %s\n", val.Usage)
+		}
+	}
+}
+
 //
 // initialize application components
 func init() {
@@ -152,7 +198,8 @@ func init() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s (v%s):\n", filepath.Base(os.Args[0]), wsctlVersion)
 		fmt.Fprintf(os.Stderr, "    (some options have short and long version)\n")
-		flag.PrintDefaults()
+		printCLIOptions()
+		fmt.Fprintf(os.Stderr, "\n")
 		os.Exit(1)
 	}
 	flag.StringVar(&cliops.wsauser, "auser", cliops.wsauser, "username to be used for authentication")
