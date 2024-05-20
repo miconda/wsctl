@@ -1,11 +1,11 @@
-# wsctl #
+# wsctl
 WebSocket Command Line Tool
 
 License: `GPLv2`
 
 Copyright: Daniel-Constantin Mierla (Asipto, https://www.asipto.com)
 
-## Overview ##
+## Overview
 
 **wsctl** is a websocket client and basic server to be used from command line. It is written in Go (Golang).
 
@@ -24,7 +24,7 @@ As a webserver socket, **wsctl** offers a few basic services useful for testing,
   * `/echo-reply` - prefix with `Replying-To: `  what is received and send back to the websocket connection
   * `/log` - write a log with the message received on websocket connection
 
-## Install ##
+## Install
 
 First install Go (http://golang.org). Once the Go environment is configured, the websocket package must be fetched locally:
 
@@ -38,7 +38,7 @@ Fetch this repository into your Go environment:
 go get -v -u github.com/miconda/wsctl
 ```
 
-### Run ##
+### Run
 
 Navigate to the project folder and run:
 
@@ -58,7 +58,7 @@ And then execute:
 $GOPATH/bin/wsctl [options]
 ```
 
-## Command Line Options ##
+## Command Line Options
 
 If run with option `-h` or `--help`, it will print the help message.
 
@@ -93,7 +93,7 @@ The HTTP URL for Origin header can be set with option `--origin=...`. Its defaul
 
 The websocket subprotocol can be set with option `--protocol=...`. Default is `sip`.
 
-## Data Templates ##
+## Data Templates
 
 The data to be sent via the websocket connection is built from a template file and a fields file.
 
@@ -117,7 +117,7 @@ Content-Length: 0
 
 The internal template can be found at the top of `wsctl.go` file.
 
-## Data Fields ##
+## Data Fields
 
 The fields file has to contain a JSON document with the fields to be replaced
 in the template file. The path to the JSON file is provided via `-f` or `--fields`
@@ -164,21 +164,21 @@ wsctl --field-val="domain:openrcs.com" ...
 The value provided via `--field-val` overwrites the value provided in the
 JSON fields file.
 
-## Internals ##
+## Internals
 
 Sending data over websocket connection has a timeout of 10 seconds. Receiving data from websocket connection has a timeout of 20 seconds. These values can be changed via command line parameters.
 
-## WebSocket Server Mode ##
+## WebSocket Server Mode
 
 To be started as a WebSocket server, `wsctl` must be given `-http-srv` or `-https-srv` command
 line parameter. Their value has to be `:PORT` to listen on all local IP address,
 or `LOCALIP:PORT` to listen only on a specific local IP.
 
-## Contributions ##
+## Contributions
 
 Contributions are welcome! Fork and do pull requests on https://github.com/miconda/wsctl .
 
-## To-Do ##
+## To-Do
 
 Just some ideas for now, not all to be implemented:
 
